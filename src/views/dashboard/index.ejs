@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Dashboard | File Uploader</title>
+		<link href="/styles/output.css" rel="stylesheet" />
+	</head>
+	<body class="bg-gray-50 text-gray-800 min-h-screen font-sans">
+		<header class="bg-white border-b shadow-sm">
+			<div
+				class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center"
+			>
+				<h1 class="text-xl md:text-2xl font-bold text-blue-600">
+					📁 File Uploader
+				</h1>
+				<a
+					href="/logout"
+					class="text-sm text-red-500 hover:text-red-600 transition"
+					>Sign out</a
+				>
+			</div>
+		</header>
+
+		<main class="max-w-6xl mx-auto px-4 py-12">
+			<div class="text-center mb-10">
+				<h2 class="text-3xl font-extrabold mb-2">Welcome back!</h2>
+				<p class="text-gray-600">
+					Here's a quick overview of your storage space.
+				</p>
+			</div>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				<div
+					class="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 flex flex-col justify-between"
+				>
+					<div>
+						<div
+							class="bg-blue-100 text-blue-600 rounded-full w-12 h-12 flex items-center justify-center mb-4"
+						>
+							📄
+						</div>
+						<h3 class="text-lg font-semibold mb-2">My Files</h3>
+						<p class="text-sm text-gray-600">
+							Browse and manage your uploaded files.
+						</p>
+					</div>
+					<a
+						href="/files"
+						class="mt-4 inline-block text-blue-600 text-sm font-medium hover:underline"
+						>View files →</a
+					>
+				</div>
+
+				<div
+					class="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 flex flex-col justify-between"
+				>
+					<div>
+						<div
+							class="bg-green-100 text-green-600 rounded-full w-12 h-12 flex items-center justify-center mb-4"
+						>
+							👥
+						</div>
+						<h3 class="text-lg font-semibold mb-2">
+							Shared Folders
+						</h3>
+						<p class="text-sm text-gray-600">
+							Access folders shared with you by other users.
+						</p>
+					</div>
+					<a
+						href="/folders/shared"
+						class="mt-4 inline-block text-green-600 text-sm font-medium hover:underline"
+						>Go to folders →</a
+					>
+				</div>
+				<div
+					class="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 flex flex-col justify-between"
+				>
+					<div>
+						<div
+							class="bg-yellow-100 text-yellow-600 rounded-full w-12 h-12 flex items-center justify-center mb-4"
+						>
+							⬆️
+						</div>
+						<h3 class="text-lg font-semibold mb-2">Upload Files</h3>
+						<p class="text-sm text-gray-600">
+							Quickly upload new files to your account.
+						</p>
+					</div>
+					<a
+						href="/upload"
+						class="mt-4 inline-block text-yellow-600 text-sm font-medium hover:underline"
+						>Upload now →</a
+					>
+				</div>
+			</div>
+		</main>
+	</body>
+</html>
