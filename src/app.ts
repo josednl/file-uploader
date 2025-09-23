@@ -5,6 +5,7 @@ import flash from 'connect-flash';
 import passport from './modules/auth/passport/passport.config';
 import dotenv from 'dotenv';
 import authRoutes from './modules/auth/routes/auth.routes';
+import dashboardRoutes from './modules/dashboard/routes/dashboard.routes';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(
     secret: process.env.SESSION_SECRET || 'supersecret',
     resave: false,
     saveUninitialized: false,
+    // cookie: { maxAge: 30 * 24 * 60 *60 * 1000}
   })
 );
 
@@ -33,7 +35,6 @@ app.use((req, res, next) => {
   res.locals.error = req.flash('error');
   next();
 });
-
 app.use((req, res, next) => {
   res.locals.user = req.user || null;
   next();
@@ -52,8 +53,8 @@ app.get('/', (req: Request, res: Response) => {
   }
 });
 
-// Auth routes
 app.use('/', authRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -63,11 +64,9 @@ app.use((req, res) => {
 //Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: express.NextFunction) => {
   console.error('Error:', err.message);
-  res
-    .status(500)
-    .render('500', {
-      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
-    });
+  res.status(500).render('500', {
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
+  });
 });
 
 // Start server
