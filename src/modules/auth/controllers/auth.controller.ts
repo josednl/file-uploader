@@ -5,11 +5,11 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 export const showLoginForm = (req: Request, res: Response) => {
-  res.render('auth/login', { error: req.flash('error') });
+  res.render('auth/login');
 };
 
 export const showRegisterForm = (req: Request, res: Response) => {
-  res.render('auth/register', { error: req.flash('error') });
+  res.render('auth/register');
 };
 
 export const registerUser = async (req: Request, res: Response) => {

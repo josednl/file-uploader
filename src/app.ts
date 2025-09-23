@@ -47,7 +47,7 @@ app.set('views', path.join(__dirname, 'views'));
 // Routes
 app.get('/', (req: Request, res: Response) => {
   if (req.isAuthenticated()) {
-    res.render('dashboard/index');
+    res.redirect('dashboard');
   } else {
     res.render('welcome');
   }
@@ -65,7 +65,7 @@ app.use((req, res) => {
 app.use((err: Error, req: Request, res: Response, next: express.NextFunction) => {
   console.error('Error:', err.message);
   res.status(500).render('500', {
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : ['Internal server error'],
   });
 });
 
