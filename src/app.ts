@@ -5,6 +5,7 @@ import path from 'path';
 import flash from 'connect-flash';
 import passport from './modules/auth/passport/passport.config';
 import dotenv from 'dotenv';
+import authRoutes from './modules/auth/routes/auth.routes';
 
 dotenv.config();
 
@@ -43,18 +44,26 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
-  res.render('welcome');
+  if (req.isAuthenticated()) {
+    res.render('dashboard/index');
+  } else {
+    res.render('welcome');
+  }
 });
 
-// app.use((req, res) => {
-//     res.status(404).render('404');
-// });
+// Auth routes
+app.use('/', authRoutes);
+
+// 404 handler
+app.use((req, res) => {
+    res.status(404).render('404');
+});
 
 //Error handling middleware
-// app.use((err: Error, req: Request, res: Response, next: express.NextFunction) => {
-//   console.log(err.message);
-//   res.status(500).send('Something broke!');
-// });
+app.use((err: Error, req: Request, res: Response, next: express.NextFunction) => {
+  console.error('Error:', err.message);
+  res.status(500).render('500', { error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error' });
+});
 
 // Start server
 const PORT = process.env.PORT || 3000;

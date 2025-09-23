@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 - Server error</title>
+    <link href="/styles/output.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex flex-col items-center justify-center">
+        <div class="max-w-md w-full text-center space-y-6">
+            <h1 class="text-9xl font-bold text-red-600">500</h1>
+            <h2 class="text-2xl font-semibold text-gray-800">Server error</h2>
+            <p class="text-gray-600">We apologize, an unexpected error has occurred.</p>
+            <p class="text-sm text-gray-500"><%= error %></p>
+            
+            <div class="mt-8">
+                <a href="/" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition duration-200">
+                    Return to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
