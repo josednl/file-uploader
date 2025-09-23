@@ -1,4 +1,3 @@
-
 import express, { Request, Response } from 'express';
 import session from 'express-session';
 import path from 'path';
@@ -17,11 +16,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Sessions
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'supersecret',
-  resave: false,
-  saveUninitialized: false,
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'supersecret',
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 // Passport initialization
 app.use(passport.initialize());
@@ -34,8 +35,8 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-	res.locals.user = req.user || null;
-	next();
+  res.locals.user = req.user || null;
+  next();
 });
 
 // EJS view engine
@@ -56,13 +57,17 @@ app.use('/', authRoutes);
 
 // 404 handler
 app.use((req, res) => {
-    res.status(404).render('404');
+  res.status(404).render('404');
 });
 
 //Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: express.NextFunction) => {
   console.error('Error:', err.message);
-  res.status(500).render('500', { error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error' });
+  res
+    .status(500)
+    .render('500', {
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
+    });
 });
 
 // Start server
