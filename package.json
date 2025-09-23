@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
-  "type": "module",
+  "type": "commonjs",
   "prisma": {
     "schema": "src/modules/prisma/schema.prisma"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon app.js",
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/app.ts",
+    "seed": "npx ts-node config/seed.ts",
     "build:css": "npx @tailwindcss/cli -i ./public/styles/main.css -o ./public/styles/output.css --watch",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
@@ -19,6 +20,15 @@
   "license": "ISC",
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.13",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/connect-flash": "^0.0.40",
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.5.2",
+    "@types/passport": "^1.0.17",
+    "@types/passport-local": "^1.0.38",
+    "@types/pg": "^8.15.5",
     "nodemon": "^3.1.10",
     "prisma": "^6.16.2",
     "tailwindcss": "^4.1.13",
@@ -28,17 +38,19 @@
     "@prisma/client": "^6.16.2",
     "@quixo3/prisma-session-store": "^3.1.13",
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
     "connect-flash": "^0.1.1",
     "connect-pg-simple": "^10.0.0",
     "dotenv": "^17.2.2",
     "ejs": "^3.1.10",
-    "express": "^5.1.0",
+    "express": "^4.21.2",
     "express-session": "^1.18.2",
     "express-validator": "^7.2.1",
     "multer": "^2.0.2",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "pg": "^8.16.3",
+    "ts-node": "^10.9.2",
     "uuid": "^13.0.0"
   }
 }
