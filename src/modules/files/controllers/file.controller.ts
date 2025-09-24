@@ -1,19 +1,17 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { User as PrismaUser } from '@prisma/client';
-import path from 'path';
-import fs from 'fs';
-
-const prisma = new PrismaClient();
+import {
+  findFilesByOwner,
+  createFileRecord,
+  findFileByIdAndOwner,
+  deleteFileRecordAndFromDisk,
+} from '../services/file.service';
 
 // GET /files - List all files for the authenticated user
 export const listFiles = async (req: Request, res: Response) => {
   try {
     const ownerId = (req.user as PrismaUser)?.id;
-    const files = await prisma.file.findMany({
-      where: { ownerId },
-      orderBy: { createdAt: 'desc' },
-    });
+    const files = await findFilesByOwner(ownerId);
     res.render('files/list', { files });
   } catch (error) {
     console.error('Error fetching files:', error);
@@ -30,15 +28,7 @@ export const uploadFile = async (req: Request, res: Response) => {
     }
 
     const ownerId = (req.user as PrismaUser)?.id;
-    await prisma.file.create({
-      data: {
-        name: req.file.originalname,
-        path: req.file.filename,
-        mimeType: req.file.mimetype,
-        size: req.file.size,
-        ownerId: ownerId!,
-      },
-    });
+    await createFileRecord(req.file, ownerId!);
 
     req.flash('success', 'File uploaded successfully');
     res.redirect('/files');
@@ -49,28 +39,20 @@ export const uploadFile = async (req: Request, res: Response) => {
   }
 };
 
-// GET /files/:id/download - Handle file download
+// GET /files/download/:id - Handle file download
 export const downloadFile = async (req: Request, res: Response) => {
   try {
     const fileId = req.params.id;
     const ownerId = (req.user as PrismaUser)?.id;
 
-    const file = await prisma.file.findFirst({
-      where: { id: fileId, ownerId },
-    });
+    const file = await findFileByIdAndOwner(fileId, ownerId);
 
     if (!file) {
       req.flash('error', 'File not found');
       return res.redirect('/files');
     }
 
-    const filePath = path.join(__dirname, '../../../../uploads', file.path);
-    console.log('Attempting to download file from path:', filePath);
-    if (!fs.existsSync(filePath)) {
-      req.flash('error', 'File not found on server');
-      return res.redirect('/files');
-    }
-    res.download(filePath, file.name);
+    res.download(file.absolutePath, file.name);
   } catch (error) {
     console.error('Error downloading file:', error);
     req.flash('error', 'Failed to download file');
@@ -78,28 +60,18 @@ export const downloadFile = async (req: Request, res: Response) => {
   }
 };
 
-// POST /files/:id/delete - Handle file deletion
+// POST /files/delete/:id - Handle file deletion
 export const deleteFile = async (req: Request, res: Response) => {
   try {
     const fileId = req.params.id;
     const ownerId = (req.user as PrismaUser)?.id;
 
-    const file = await prisma.file.findFirst({
-      where: { id: fileId, ownerId },
-    });
+    const deleted = await deleteFileRecordAndFromDisk(fileId, ownerId);
 
-    if (!file) {
+    if (!deleted) {
       req.flash('error', 'File not found');
       return res.redirect('/files');
     }
-
-    await prisma.file.delete({
-      where: { id: fileId },
-    });
-
-    // Delete the file from the filesystem
-    const filePath = path.join(__dirname, '../../../../uploads', file.path);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
     req.flash('success', 'File deleted successfully');
     res.redirect('/files');
@@ -110,14 +82,13 @@ export const deleteFile = async (req: Request, res: Response) => {
   }
 };
 
+// GET /files/:id - File details
 export const getFileDetails = async (req: Request, res: Response) => {
   try {
     const fileId = req.params.id;
     const ownerId = (req.user as PrismaUser)?.id;
 
-    const file = await prisma.file.findFirst({
-      where: { id: fileId, ownerId },
-    });
+    const file = await findFileByIdAndOwner(fileId, ownerId);
 
     if (!file) {
       req.flash('error', 'File not found');

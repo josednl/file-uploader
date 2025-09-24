@@ -14,7 +14,7 @@
     <% files.forEach(file => { %>
       <li class="border p-4 rounded bg-white shadow flex justify-between">
         <span><%= file.name %> (<%= (file.size / 1024).toFixed(1) %> KB)</span>
-        <a href="/files/<%= file.id %>" class="text-blue-600 hover:underline">Details</a>
+        <a href="/files/details/<%= file.id %>" class="text-blue-600 hover:underline">Details</a>
       </li>
     <% }) %>
   <% } %>

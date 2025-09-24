@@ -18,7 +18,7 @@ const upload = multer({
 });
 
 router.get('/', listFiles);
-router.get('/:id', getFileDetails);
+router.get('/details/:id', getFileDetails);
 router.get('/upload', (req, res) => {
   res.render('files/upload');
 });
