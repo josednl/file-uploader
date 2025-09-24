@@ -1,0 +1,22 @@
+<%- include('../partials/header', { title: 'Your Files' }) %>
+
+<h2 class="text-2xl font-semibold mb-4">Your Files</h2>
+
+<form action="/files/upload" method="POST" enctype="multipart/form-data" class="mb-6">
+  <input type="file" name="file" required>
+  <button type="submit" class="btn btn-primary ml-2">Upload</button>
+</form>
+
+<ul class="space-y-2">
+  <% if (files.length === 0) { %>
+    <li class="text-gray-500">No files uploaded yet.</li>
+  <% } else { %>
+    <% files.forEach(file => { %>
+      <li class="border p-4 rounded bg-white shadow flex justify-between">
+        <span><%= file.name %> (<%= (file.size / 1024).toFixed(1) %> KB)</span>
+        <a href="/files/<%= file.id %>" class="text-blue-600 hover:underline">Details</a>
+      </li>
+    <% }) %>
+  <% } %>
+</ul>
+<%- include('../partials/footer') %>

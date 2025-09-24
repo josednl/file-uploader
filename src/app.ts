@@ -6,6 +6,7 @@ import passport from './modules/auth/passport/passport.config';
 import dotenv from 'dotenv';
 import authRoutes from './modules/auth/routes/auth.routes';
 import dashboardRoutes from './modules/dashboard/routes/dashboard.routes';
+import filesRouter from './modules/files/routes/file.routes';
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/', authRoutes);
 app.use('/dashboard', dashboardRoutes);
+app.use('/files', filesRouter);
 
 // 404 handler
 app.use((req, res) => {
