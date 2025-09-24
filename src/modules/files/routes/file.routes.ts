@@ -7,6 +7,8 @@ import {
   downloadFile,
   deleteFile,
   getFileDetails,
+  showMoveFileForm,
+  handleMoveFile,
 } from '../controllers/file.controller';
 
 const router = express.Router();
@@ -25,5 +27,7 @@ router.get('/upload', (req, res) => {
 router.post('/upload', upload.single('file'), uploadFile);
 router.get('/download/:id', downloadFile);
 router.post('/delete/:id', deleteFile);
+router.get('/move/:id', showMoveFileForm);
+router.post('/move/:id', handleMoveFile);
 
 export default router;

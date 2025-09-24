@@ -44,4 +44,7 @@ model Folder {
   shared    Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  parentId  String?    
+  parent    Folder?    @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Folder[]   @relation("FolderHierarchy")
 }

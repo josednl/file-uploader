@@ -48,6 +48,35 @@
                 Upload now <i class="fas fa-arrow-right ml-2"></i>
             </a>
         </div>
+
+        <section>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-semibold text-gray-800">My Folders</h2>
+                <a href="/folders/new" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700">
+                    <i class="fas fa-plus mr-2"></i> New Folder
+                </a>
+            </div>
+
+            <% if (folders.length === 0) { %>
+                <p class="text-gray-500">You don’t have any folders yet.</p>
+            <% } else { %>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <% folders.forEach(folder => { %>
+                        <a href="/folders/<%= folder.id %>" class="block bg-white rounded-lg shadow hover:shadow-md p-4 border hover:border-blue-500 transition">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-blue-100 text-blue-600 rounded-full w-10 h-10 flex items-center justify-center">
+                                    <i class="fas fa-folder"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-md font-semibold text-gray-900"><%= folder.name %></h3>
+                                    <p class="text-xs text-gray-500">Created at <%= folder.createdAt.toLocaleDateString() %></p>
+                                </div>
+                            </div>
+                        </a>
+                    <% }) %>
+                </div>
+            <% } %>
+        </section>
     </div>
 </main>
 

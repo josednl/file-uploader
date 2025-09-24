@@ -15,7 +15,8 @@ export const findFilesByOwner = async (ownerId: string): Promise<File[]> => {
 
 export const createFileRecord = async (
   fileData: Express.Multer.File,
-  ownerId: string
+  ownerId: string,
+  folderId?: string | null
 ): Promise<File> => {
   return prisma.file.create({
     data: {
@@ -23,7 +24,8 @@ export const createFileRecord = async (
       path: fileData.filename,
       mimeType: fileData.mimetype,
       size: fileData.size,
-      ownerId: ownerId,
+      ownerId,
+      folderId: folderId ?? null,
     },
   });
 };
@@ -79,4 +81,37 @@ export const deleteFileRecordAndFromDisk = async (
     // Re-throw the error to be caught by the controller
     throw new Error('Error during file deletion process.');
   }
+};
+
+export const findFileByIdAndOwnerWithFolder = async (
+  fileId: string,
+  ownerId: string
+): Promise<(File & { folder: { id: string; name: string } | null }) | null> => {
+  return prisma.file.findFirst({
+    where: { id: fileId, ownerId },
+    include: { folder: true },
+  });
+};
+
+export const findFoldersByOwner = async (ownerId: string) => {
+  return prisma.folder.findMany({
+    where: { ownerId },
+    orderBy: { name: 'asc' },
+  });
+};
+
+export const moveFileToFolder = async (
+  fileId: string,
+  ownerId: string,
+  folderId: string | null
+): Promise<File> => {
+  return prisma.file.update({
+    where: {
+      id: fileId,
+      ownerId,
+    },
+    data: {
+      folderId,
+    },
+  });
 };

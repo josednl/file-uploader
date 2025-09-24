@@ -1,0 +1,32 @@
+<%- include('../partials/header', { title: 'My Folders' }) %>
+
+<main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">My Folders</h1>
+    <a href="/folders/create" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+      + New Folder
+    </a>
+  </div>
+
+  <% if (folders.length === 0) { %>
+    <p class="text-gray-500">You don’t have any folders yet.</p>
+  <% } else { %>
+    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% folders.forEach(folder => { %>
+        <li class="bg-white shadow rounded p-4">
+          <h2 class="text-lg font-semibold text-gray-800 mb-1">
+            <a href="/folders/<%= folder.id %>" class="hover:underline"><%= folder.name %></a>
+          </h2>
+          <p class="text-sm text-gray-500">
+            <%= folder.children.length %> subfolder<%= folder.children.length !== 1 ? 's' : '' %>
+          </p>
+          <a href="/folders/edit/<%= folder.id %>" class="text-blue-600 text-sm hover:underline mt-2 inline-block">
+            Edit
+          </a>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</main>
+
+<%- include('../partials/footer') %>

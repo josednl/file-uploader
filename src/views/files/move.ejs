@@ -1,0 +1,33 @@
+<%- include('../partials/header', { title: 'Move File' }) %>
+
+<main class="max-w-2xl mx-auto py-10 px-4">
+  <h1 class="text-2xl font-bold mb-4">Move File: <%= file.name %></h1>
+
+  <form action="/files/move/<%= file.id %>" method="POST" class="space-y-4">
+    <div>
+      <label for="folderId" class="block text-sm font-medium text-gray-700 mb-1">Select Folder</label>
+      <select id="folderId" name="folderId" class="w-full rounded border-gray-300">
+        <option value="none" <%= !file.folder ? 'selected' : '' %>>-- No folder --</option>
+        <% folders.forEach(folder => { %>
+          <option value="<%= folder.id %>" <%= file.folder && folder.id === file.folder.id ? 'selected' : '' %>>
+            <%= folder.name %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div>
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Move File
+      </button>
+    </div>
+  </form>
+
+  <div class="mt-6">
+    <a href="/files/details/<%= file.id %>?from=<%= folder ? ('/folders/' + folder.id) : '/files' %>" class="text-sm text-blue-600 hover:underline">
+      ← Back to file details
+    </a>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

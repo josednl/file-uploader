@@ -1,0 +1,41 @@
+<%- include('../partials/header', { title: 'Edit Folder' }) %>
+
+<main class="max-w-xl mx-auto mt-10 bg-white p-6 rounded shadow">
+  <h1 class="text-2xl font-bold mb-4">Edit Folder</h1>
+
+  <form action="/folders/edit/<%= folder.id %>" method="POST" class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Folder Name</label>
+      <input type="text" name="name" value="<%= folder.name %>" required
+        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Parent Folder</label>
+      <select name="parentId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+        <option value="">Root</option>
+        <% folders.forEach(f => { %>
+          <% if (f.id !== folder.id) { %>
+            <option value="<%= f.id %>" <%= folder.parentId === f.id ? 'selected' : '' %>><%= f.name %></option>
+          <% } %>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="flex justify-between items-center mt-6">
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Update</button>
+
+      <form action="/folders/delete/<%= folder.id %>" method="POST" onsubmit="return confirm('This will delete the folder, its files, and all subfolders. Are you sure?')">
+        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Delete</button>
+      </form>
+    </div>
+  </form>
+
+  <div class="mt-4">
+    <a href="<%= folder.parentId ? '/folders/' + folder.parentId : '/dashboard' %>" class="text-blue-600 hover:underline text-sm">
+      ← Back
+    </a>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

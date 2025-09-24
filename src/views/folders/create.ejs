@@ -1,0 +1,26 @@
+<%- include('../partials/header', { title: 'New folder' }) %>
+
+<h1 class="text-xl font-bold mb-4">Create Folder</h1>
+
+<form action="/folders/create" method="POST" class="space-y-4">
+  <div>
+    <label class="block text-sm font-medium text-gray-700">Folder Name</label>
+    <input type="text" name="name" required class="mt-1 block w-full border rounded px-3 py-2" />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700">Parent Folder (optional)</label>
+    <select name="parentId" class="mt-1 block w-full border rounded px-3 py-2">
+      <option value="">— Root —</option>
+      <% folders.forEach(folder => { %>
+        <option value="<%= folder.id %>"><%= folder.name %></option>
+      <% }) %>
+    </select>
+  </div>
+
+  <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+    Create Folder
+  </button>
+</form>
+
+<%- include('../partials/footer') %>
