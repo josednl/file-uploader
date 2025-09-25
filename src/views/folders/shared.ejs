@@ -1,0 +1,31 @@
+<%- include('../partials/header', { title: 'Shared Folders' }) %>
+
+<main class="max-w-4xl mx-auto px-4 py-10">
+  <h1 class="text-2xl font-bold mb-6">Shared Folders</h1>
+
+  <% if (sharedFolders.length === 0) { %>
+    <p class="text-gray-500">No folders have been shared with you yet.</p>
+  <% } else { %>
+    <ul class="space-y-4">
+      <% sharedFolders.forEach(shared => { %>
+        <li class="bg-white shadow rounded px-6 py-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <a href="/folders/<%= shared.folder.id %>" class="text-lg text-blue-600 hover:underline font-medium">
+                📁 <%= shared.folder.name %>
+              </a>
+              <p class="text-sm text-gray-500">Shared by <%= shared.folder.owner.email %> — Permission: <%= shared.permission %></p>
+            </div>
+            <a href="/folders/<%= shared.folder.id %>" class="text-blue-500 text-sm hover:underline">Open</a>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <div class="mt-8">
+    <a href="/dashboard" class="text-blue-600 hover:underline text-sm">&larr; Back to Dashboard</a>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

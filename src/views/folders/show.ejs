@@ -7,14 +7,14 @@
     <ul class="flex items-center space-x-2">
       <li><a href="/folders/" class="hover:underline">Root</a></li>
       <% breadcrumb.forEach((crumb, index) => { %>
-        <li>/</li>
-        <li>
-          <% if (index === breadcrumb.length - 1) { %>
-            <span class="font-semibold text-gray-800"><%= crumb.name %></span>
-          <% } else { %>
-            <a href="/folders/<%= crumb.id %>" class="hover:underline"><%= crumb.name %></a>
-          <% } %>
-        </li>
+      <li>/</li>
+      <li>
+        <% if (index === breadcrumb.length - 1) { %>
+        <span class="font-semibold text-gray-800"><%= crumb.name %></span>
+        <% } else { %>
+        <a href="/folders/<%= crumb.id %>" class="hover:underline"><%= crumb.name %></a>
+        <% } %>
+      </li>
       <% }) %>
     </ul>
   </nav>
@@ -26,15 +26,19 @@
       <p class="text-sm text-gray-500">Created at <%= folder.createdAt.toLocaleDateString() %></p>
     </div>
 
+    <% if (permission === 'OWNER') { %>
     <div class="flex gap-3">
       <a href="/folders/edit/<%= folder.id %>" class="text-sm bg-yellow-500 text-white px-3 py-2 rounded hover:bg-yellow-600">Edit</a>
       <form action="/folders/delete/<%= folder.id %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this folder and all its contents?');">
         <button type="submit" class="text-sm bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700">Delete</button>
       </form>
     </div>
+    <% } %>
+
   </div>
 
   <!-- File Upload -->
+  <% if (permission === 'OWNER' || permission === 'EDIT') { %>
   <div class="mb-10 border border-gray-300 p-4 rounded bg-gray-50">
     <h2 class="text-lg font-semibold text-gray-800 mb-3">Upload a file to this folder</h2>
     <form action="/files/upload" method="POST" enctype="multipart/form-data" class="flex items-center gap-4">
@@ -45,31 +49,50 @@
       </button>
     </form>
   </div>
+  <% } %>
+
 
   <!-- Files in folder -->
   <div class="mb-10">
     <h2 class="text-xl font-semibold text-gray-800 mb-2">Files in this folder</h2>
 
     <% if (folder.files.length === 0) { %>
-      <p class="text-gray-500">This folder is empty.</p>
+    <p class="text-gray-500">This folder is empty.</p>
     <% } else { %>
-      <ul class="space-y-4">
-        <% folder.files.forEach(file => { %>
-          <li class="bg-white shadow rounded p-4 flex justify-between items-center">
-            <div>
-              <p class="font-medium text-gray-900"><%= file.name %></p>
-              <p class="text-sm text-gray-500"><%= file.mimeType %> • <%= (file.size / 1024).toFixed(1) %> KB</p>
-            </div>
-            <div class="flex gap-3">
-              <a href="/files/details/<%= file.id %>?from=<%= folder ? ('/folders/' + folder.id) : '/files' %>" class="text-blue-600 hover:underline text-sm">View</a>
-              <a href="/files/download/<%= file.id %>" class="text-green-600 hover:underline text-sm">Download</a>
-              <form action="/files/delete/<%= file.id %>" method="POST" onsubmit="return confirm('Delete this file?');">
-                <button type="submit" class="text-red-600 hover:underline text-sm">Delete</button>
-              </form>
-            </div>
-          </li>
-        <% }) %>
-      </ul>
+    <ul class="space-y-4">
+      <% folder.files.forEach(file => { %>
+      <li class="bg-white shadow rounded p-4 flex justify-between items-center">
+        <div>
+          <p class="font-medium text-gray-900"><%= file.name %></p>
+          <p class="text-sm text-gray-500"><%= file.mimeType %> • <%= (file.size / 1024).toFixed(1) %> KB</p>
+        </div>
+        <div class="flex gap-3">
+          <a href="/files/details/<%= file.id %>?from=<%= folder ? ('/folders/' + folder.id) : '/files' %>" class="text-blue-600 hover:underline text-sm">View</a>
+          <a href="/files/download/<%= file.id %>" class="text-green-600 hover:underline text-sm">Download</a>
+          <form action="/folders/share/<%= folder.id %>/public" method="POST">
+            <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm">
+              Generate Public Link
+            </button>
+          </form>
+
+          <% if (folder.publicShare) { %>
+          <p class="mt-2 text-sm text-gray-600">
+            Public Link: <a class="text-blue-600 underline" href="/shared/<%= folder.publicShare.token %>" target="_blank">
+              /shared/<%= folder.publicShare.token %>
+            </a>
+          </p>
+          <% } %>
+
+          <% if (permission === 'OWNER' || permission === 'EDIT') { %>
+          <form action="/files/delete/<%= file.id %>" method="POST" onsubmit="return confirm('Delete this file?');">
+            <button type="submit" class="text-red-600 hover:underline text-sm">Delete</button>
+          </form>
+          <% } %>
+
+        </div>
+      </li>
+      <% }) %>
+    </ul>
     <% } %>
   </div>
 
@@ -77,17 +100,17 @@
   <div class="mb-10">
     <h2 class="text-xl font-semibold text-gray-800 mb-2">Subfolders</h2>
     <% if (folder.children.length === 0) { %>
-      <p class="text-gray-500">No subfolders yet.</p>
+    <p class="text-gray-500">No subfolders yet.</p>
     <% } else { %>
-      <ul class="space-y-3">
-        <% folder.children.forEach(child => { %>
-          <li>
-            <a href="/folders/<%= child.id %>" class="text-blue-600 hover:underline">
-              📁 <%= child.name %>
-            </a>
-          </li>
-        <% }) %>
-      </ul>
+    <ul class="space-y-3">
+      <% folder.children.forEach(child => { %>
+      <li>
+        <a href="/folders/<%= child.id %>" class="text-blue-600 hover:underline">
+          📁 <%= child.name %>
+        </a>
+      </li>
+      <% }) %>
+    </ul>
     <% } %>
   </div>
 
@@ -96,18 +119,39 @@
     <h2 class="text-xl font-semibold text-gray-800 mb-4">Create a Subfolder</h2>
     <form action="/folders/create" method="POST" class="flex items-center gap-4">
       <input type="hidden" name="parentId" value="<%= folder.id %>">
-      <input
-        type="text"
-        name="name"
-        placeholder="Subfolder name"
-        required
-        class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:border-blue-300"
-      />
+      <input type="text" name="name" placeholder="Subfolder name" required class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:border-blue-300" />
       <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
         Create
       </button>
     </form>
   </div>
+
+  <% if (permission === 'OWNER' || permission === 'EDIT') { %>
+  <!-- Share Folder Form -->
+  <div class="border-t pt-6 mt-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Share this Folder</h2>
+    <form action="/folders/<%= folder.id %>/share" method="POST" class="space-y-4 sm:flex sm:items-center sm:gap-4">
+      <input type="email" name="email" placeholder="User email" required class="w-full border border-gray-300 rounded px-4 py-2" />
+      <select name="permission" class="border border-gray-300 rounded px-4 py-2">
+        <option value="READ">Read Only</option>
+        <option value="EDIT">Can Edit</option>
+      </select>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Share</button>
+    </form>
+  </div>
+  <% } %>
+
+  <!-- Shared Users -->
+  <% if (sharedUsers && sharedUsers.length > 0) { %>
+  <div class="mt-6">
+    <h3 class="text-lg font-semibold mb-2">Shared with:</h3>
+    <ul class="list-disc pl-5 text-gray-700 text-sm">
+      <% sharedUsers.forEach(item => { %>
+      <li><%= item.user.email %> — <%= item.permission %></li>
+      <% }) %>
+    </ul>
+  </div>
+  <% } %>
 </main>
 
 <%- include('../partials/footer') %>

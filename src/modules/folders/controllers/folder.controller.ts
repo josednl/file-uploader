@@ -7,7 +7,14 @@ import {
   getAllFoldersForUser,
   getFolderByIdWithContents,
   getFolderBreadcrumb,
-  deleteFolderAndContents
+  deleteFolderAndContents,
+  createPublicShare,
+  getFolderByPublicToken,
+  shareFolderWithUser,
+  getSharedUsersForFolder,
+  getFoldersSharedWithUser,
+  getAccessibleFolder,
+  getUserPermissionForFolder
 } from '../services/folder.service';
 
 export const listRootFolders = async (req: Request, res: Response) => {
@@ -47,8 +54,15 @@ export const createFolderHandler = async (req: Request, res: Response) => {
 
 export const viewFolder = async (req: Request, res: Response) => {
   const folderId = req.params.id;
+  const ownerId = (req.user as PrismaUser).id;
 
-  const folder = await getFolderByIdWithContents(folderId);
+  const folder = await getAccessibleFolder(folderId, ownerId);
+  const permission = await getUserPermissionForFolder(folderId, ownerId);
+
+  if (!permission) {
+    req.flash('error', 'You do not have access to this folder.');
+    return res.redirect('/folders');
+  }
 
   if (!folder) {
     req.flash('error', 'Folder not found');
@@ -56,8 +70,11 @@ export const viewFolder = async (req: Request, res: Response) => {
   }
 
   const breadcrumb = await getFolderBreadcrumb(folderId);
-  res.render('folders/show', { folder, breadcrumb });
+  const sharedUsers = await getSharedUsersForFolder(folderId);
+
+  res.render('folders/show', { folder, breadcrumb, sharedUsers, permission });
 };
+
 
 // GET /folders/edit/:id
 export const editFolderForm = async (req: Request, res: Response) => {
@@ -79,10 +96,16 @@ export const editFolderForm = async (req: Request, res: Response) => {
 export const updateFolderHandler = async (req: Request, res: Response) => {
   const ownerId = (req.user as PrismaUser).id;
   const folderId = req.params.id;
-  const { name, parentId } = req.body;
+  const permission = await getUserPermissionForFolder(folderId, ownerId);
 
+  if (permission !== 'OWNER') {
+    req.flash('error', 'Only the owner can perform this action.');
+    return res.redirect(`/folders/${folderId}`);
+  }
+  const { name, parentId } = req.body;
+  const normalizedParentId = parentId && parentId !== '' ? parentId : null;
   try {
-    await updateFolder(folderId, ownerId, { name, parentId });
+    await updateFolder(folderId, ownerId, { name, parentId: normalizedParentId });
     req.flash('success', 'Folder updated successfully');
     res.redirect(parentId ? `/folders/${parentId}` : '/dashboard');
   } catch (err) {
@@ -96,7 +119,13 @@ export const updateFolderHandler = async (req: Request, res: Response) => {
 export const deleteFolderHandler = async (req: Request, res: Response) => {
   const ownerId = (req.user as PrismaUser).id;
   const folderId = req.params.id;
+  const permission = await getUserPermissionForFolder(folderId, ownerId);
 
+  if (permission !== 'OWNER') {
+    req.flash('error', 'Only the owner can perform this action.');
+    return res.redirect(`/folders/${folderId}`);
+  }
+  
   try {
     const folder = await getFolderByIdWithContents(folderId);
     const parentId = folder?.parentId;
@@ -107,6 +136,57 @@ export const deleteFolderHandler = async (req: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     req.flash('error', 'Failed to delete folder');
+    res.redirect('/dashboard');
+  }
+};
+
+export const createPublicShareHandlder = async (req: Request, res: Response) => {
+  const folderId = req.params.id;
+
+  try {
+    const share = await createPublicShare(folderId);
+    req.flash('success', 'Public share link created');
+    res.redirect(`/folders/${folderId}`);
+  } catch (error) {
+    console.error(error);
+    req.flash('error', 'Could not create public share');
+    res.redirect(`/folders/${folderId}`);
+  }
+};
+
+export const viewSharedFolder = async (req: Request, res: Response) => {
+  const token = req.params.token;
+
+  const folder = await getFolderByPublicToken(token);
+  if (!folder) {
+    return res.status(404).render('404', { message: 'Shared folder not found' });
+  }
+
+  res.render('folders/shared', { folder });
+};
+
+export const handleShareFolder = async (req: Request, res: Response) => {
+  const folderId = req.params.id;
+  const { email, permission } = req.body;
+
+  try {
+    await shareFolderWithUser(folderId, email, permission);
+    req.flash('success', `Folder shared with ${email}`);
+  } catch (err: any) {
+    req.flash('error', err.message || 'Failed to share folder');
+  }
+
+  res.redirect(`/folders/${folderId}`);
+};
+
+export const listSharedFolders = async (req: Request, res: Response) => {
+  const userId = (req.user as PrismaUser).id;
+  try {
+    const sharedFolders = await getFoldersSharedWithUser(userId);
+    res.render('folders/shared', { sharedFolders });
+  } catch (error) {
+    console.error(error);
+    req.flash('error', 'Failed to load shared folders');
     res.redirect('/dashboard');
   }
 };

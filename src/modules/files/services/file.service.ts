@@ -1,4 +1,4 @@
-import { PrismaClient, File } from '@prisma/client';
+import { PrismaClient, File, Folder } from '@prisma/client';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -115,3 +115,31 @@ export const moveFileToFolder = async (
     },
   });
 };
+
+export async function findAccessibleFile(
+  fileId: string,
+  userId: string
+): Promise<(File & { folder?: Folder | null }) | null> {
+  const file = await prisma.file.findFirst({
+    where: {
+      id: fileId,
+      OR: [
+        { ownerId: userId },
+        {
+          folder: {
+            sharedWithUsers: {
+              some: {
+                userId: userId,
+              },
+            },
+          },
+        },
+      ],
+    },
+    include: {
+      folder: true,
+    },
+  });
+
+  return file;
+}

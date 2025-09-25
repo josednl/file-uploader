@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User as PrismaUser } from '@prisma/client';
+import path from 'path';
 import {
   findFilesByOwner,
   createFileRecord,
@@ -7,7 +8,8 @@ import {
   deleteFileRecordAndFromDisk,
   findFileByIdAndOwnerWithFolder,
   moveFileToFolder,
-  findFoldersByOwner
+  findFoldersByOwner,
+  findAccessibleFile
 } from '../services/file.service';
 
 // GET /files - List all files for the authenticated user
@@ -52,14 +54,15 @@ export const downloadFile = async (req: Request, res: Response) => {
     const fileId = req.params.id;
     const ownerId = (req.user as PrismaUser)?.id;
 
-    const file = await findFileByIdAndOwner(fileId, ownerId);
+    const file = await findAccessibleFile(fileId, ownerId);
 
     if (!file) {
-      req.flash('error', 'File not found');
+      req.flash('error', 'File not found or access denied');
       return res.redirect('/files');
     }
 
-    res.download(file.absolutePath, file.name);
+    const absolutePath = path.join(path.join(__dirname, '../../../../uploads'), file.path);
+    res.download(absolutePath, file.name);
   } catch (error) {
     console.error('Error downloading file:', error);
     req.flash('error', 'Failed to download file');
@@ -67,15 +70,16 @@ export const downloadFile = async (req: Request, res: Response) => {
   }
 };
 
+
 // POST /files/delete/:id - Handle file deletion
 export const deleteFile = async (req: Request, res: Response) => {
   try {
     const fileId = req.params.id;
     const ownerId = (req.user as PrismaUser)?.id;
+    const file = await findAccessibleFile(fileId, ownerId);
 
-    const file = await findFileByIdAndOwnerWithFolder(fileId, ownerId);
     if (!file) {
-      req.flash('error', 'File not found');
+      req.flash('error', 'File not found or access denied');
       return res.redirect('/files');
     }
 
@@ -104,10 +108,10 @@ export const getFileDetails = async (req: Request, res: Response) => {
     const ownerId = (req.user as PrismaUser)?.id;
     const from = req.query.from?.toString();
 
-    const file = await findFileByIdAndOwnerWithFolder(fileId, ownerId);
-
+    const file = await findAccessibleFile(fileId, ownerId);
+    console.log(file);
     if (!file) {
-      req.flash('error', 'File not found');
+      req.flash('error', 'File not found or access denied');
       return res.redirect('/files');
     }
 

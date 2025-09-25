@@ -17,6 +17,7 @@ model User {
   updatedAt DateTime  @updatedAt
   files     File[]       
   folders   Folder[]      
+  sharedFolders SharedFolder[]
 }
 
 model File {
@@ -41,10 +42,37 @@ model Folder {
   ownerId   String
   owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   files     File[]    
-  shared    Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   parentId  String?    
   parent    Folder?    @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children  Folder[]   @relation("FolderHierarchy")
+  sharedWithUsers SharedFolder[]
+  publicShare PublicFolderShare?
+}
+
+model PublicFolderShare {
+  @@map("public_folder_shares")
+  id        String   @id @default(uuid())
+  folderId  String   @unique
+  folder    Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model SharedFolder {
+  @@map("shared_folders")
+  id        String   @id @default(uuid())
+  folderId  String
+  folder    Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  permission Permission @default(READ)
+} 
+
+enum Permission {
+  READ
+  EDIT
 }
