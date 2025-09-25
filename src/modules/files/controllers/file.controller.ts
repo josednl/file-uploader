@@ -109,7 +109,6 @@ export const getFileDetails = async (req: Request, res: Response) => {
     const from = req.query.from?.toString();
 
     const file = await findAccessibleFile(fileId, ownerId);
-    console.log(file);
     if (!file) {
       req.flash('error', 'File not found or access denied');
       return res.redirect('/files');

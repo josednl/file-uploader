@@ -1,6 +1,7 @@
 import { PrismaClient, File, Folder } from '@prisma/client';
 import path from 'path';
 import fs from 'fs/promises';
+import { hasAccessToFolderRecursively } from '../../folders/services/folder.service';
 
 const prisma = new PrismaClient();
 
@@ -118,28 +119,35 @@ export const moveFileToFolder = async (
 
 export async function findAccessibleFile(
   fileId: string,
-  userId: string
+  userId: string,
+  publicToken?: string
 ): Promise<(File & { folder?: Folder | null }) | null> {
-  const file = await prisma.file.findFirst({
-    where: {
-      id: fileId,
-      OR: [
-        { ownerId: userId },
-        {
-          folder: {
-            sharedWithUsers: {
-              some: {
-                userId: userId,
-              },
-            },
-          },
-        },
-      ],
-    },
+  const file = await prisma.file.findUnique({
+    where: { id: fileId },
     include: {
-      folder: true,
+      folder: {
+        include: {
+          publicShare: true,
+          sharedWithUsers: true,
+        },
+      },
     },
   });
 
-  return file;
+  if (!file) return null;
+
+  const folder = file.folder;
+
+   if (!file) return null;
+
+  if (file.ownerId === userId) return file;
+
+  if (file.folderId) {
+    const hasAccess = await hasAccessToFolderRecursively(file.folderId, userId);
+    return hasAccess ? file : null;
+  }
+
+  return null;
 }
+
+

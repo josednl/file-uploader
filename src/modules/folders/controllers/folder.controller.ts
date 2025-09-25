@@ -13,7 +13,7 @@ import {
   shareFolderWithUser,
   getSharedUsersForFolder,
   getFoldersSharedWithUser,
-  getAccessibleFolder,
+  findAccessibleFolder,
   getUserPermissionForFolder
 } from '../services/folder.service';
 
@@ -56,7 +56,7 @@ export const viewFolder = async (req: Request, res: Response) => {
   const folderId = req.params.id;
   const ownerId = (req.user as PrismaUser).id;
 
-  const folder = await getAccessibleFolder(folderId, ownerId);
+  const folder = await findAccessibleFolder(folderId, ownerId);
   const permission = await getUserPermissionForFolder(folderId, ownerId);
 
   if (!permission) {
@@ -68,7 +68,6 @@ export const viewFolder = async (req: Request, res: Response) => {
     req.flash('error', 'Folder not found');
     return res.redirect('/dashboard');
   }
-
   const breadcrumb = await getFolderBreadcrumb(folderId);
   const sharedUsers = await getSharedUsersForFolder(folderId);
 

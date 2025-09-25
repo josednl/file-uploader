@@ -184,47 +184,77 @@ export const getFoldersSharedWithUser = async (userId: string) => {
   });
 };
 
-export const getAccessibleFolder = async (folderId: string, userId: string) => {
+export async function hasAccessToFolderRecursively(folderId: string, userId: string): Promise<boolean> {
+  let currentFolder = await prisma.folder.findUnique({
+    where: { id: folderId },
+    include: {
+      sharedWithUsers: true,
+    },
+  });
+
+  while (currentFolder) {
+    if (currentFolder.ownerId === userId) return true;
+
+    const isShared = currentFolder.sharedWithUsers.some(
+      (shared) => shared.userId === userId
+    );
+    if (isShared) return true;
+
+    if (!currentFolder.parentId) break;
+
+    currentFolder = await prisma.folder.findUnique({
+      where: { id: currentFolder.parentId },
+      include: {
+        sharedWithUsers: true,
+      },
+    });
+  }
+
+  return false;
+}
+
+export async function findAccessibleFolder(folderId: string, userId: string): Promise<Folder | null> {
   const folder = await prisma.folder.findUnique({
     where: { id: folderId },
     include: {
       files: true,
       children: true,
-      owner: true,
+      sharedWithUsers: true,
     },
   });
 
   if (!folder) return null;
 
-  // Verify if you are the owner or have shared access
-  if (folder.ownerId === userId) return folder;
+  const hasAccess = await hasAccessToFolderRecursively(folder.id, userId);
+  return hasAccess ? folder : null;
+}
 
-  const shared = await prisma.sharedFolder.findFirst({
-    where: {
-      folderId,
-      userId,
-    },
-  });
-
-  if (shared) return folder;
-
-  return null;
-};
-
-export async function getUserPermissionForFolder(folderId: string, userId: string): Promise<'OWNER' | 'EDIT' | 'READ' | null> {
-  const folder = await prisma.folder.findUnique({
+export async function getUserPermissionForFolder(
+  folderId: string,
+  userId: string
+): Promise<'OWNER' | 'EDIT' | 'READ' | null> {
+  let currentFolder = await prisma.folder.findUnique({
     where: { id: folderId },
     include: {
-      sharedWithUsers: {
-        where: { userId },
-      },
+      sharedWithUsers: true,
     },
   });
 
-  if (!folder) return null;
+  while (currentFolder) {
+    if (currentFolder.ownerId === userId) return 'OWNER';
 
-  if (folder.ownerId === userId) return 'OWNER';
+    const shared = currentFolder.sharedWithUsers.find(s => s.userId === userId);
+    if (shared) return shared.permission;
 
-  const shared = folder.sharedWithUsers[0];
-  return shared?.permission ?? null;
+    if (!currentFolder.parentId) break;
+
+    currentFolder = await prisma.folder.findUnique({
+      where: { id: currentFolder.parentId },
+      include: {
+        sharedWithUsers: true,
+      },
+    });
+  }
+
+  return null;
 }
