@@ -1,52 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> - File Uploader</title>
-    <link href="/styles/output.css" rel="stylesheet">
-    <%# Add Font Awesome for icons %>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %> - FileDrive</title>
+  <link href="/styles/output.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <%# Navigation bar %>
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <%# Logo %>
-                    <div class="flex-shrink-0 flex items-center">
-                        <a href="/" class="text-xl font-bold text-blue-600">
-                            <i class="fas fa-cloud-upload-alt mr-2"></i>
-                            File Uploader
-                        </a>
-                    </div>
-                </div>
+<body class="bg-gray-50 flex flex-col min-h-screen font-inter">
+  <nav class="bg-white shadow-lg border-b border-gray-100 sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        
+        <a href="/" class="text-2xl font-extrabold text-gray-900 tracking-tight flex items-center space-x-2 transition hover:text-blue-600">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4m0-10l8-4m-8 4L4 7m8 4V3" />
+          </svg>
+          <span class="text-xl">FileDrive</span>
+        </a>
 
-                <%# Navigation menu %>
-                <div class="flex items-center">
-                    <% if (locals.user) { %>
-                        <a href="/dashboard" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                            <i class="fas fa-home mr-1"></i> Dashboard
-                        </a>
-                        <form action="/logout" method="POST" class="inline">
-                            <button type="submit" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                                <i class="fas fa-sign-out-alt mr-1"></i> Log out
-                            </button>
-                        </form>
-                    <% } else { %>
-                        <a href="/login" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                            <i class="fas fa-sign-in-alt mr-1"></i> Log in
-                        </a>
-                        <a href="/register" class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                            <i class="fas fa-user-plus mr-1"></i> Sign up
-                        </a>
-                    <% } %>
-                </div>
-            </div>
+        <div class="flex items-center space-x-6">
+          <% if (locals.user) { %>
+            
+            <a href="/dashboard" class="text-gray-600 hover:text-blue-600 text-sm font-semibold transition flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Dashboard
+            </a>
+            
+            <form action="/logout" method="POST" class="inline">
+              <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-semibold transition flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3v-1m4-11V6a3 3 0 00-3-3H6a3 3 0 00-3 3v1" />
+                </svg>
+                Log out
+              </button>
+            </form>
+
+          <% } else { %>
+            
+            <a href="/login" class="text-gray-600 hover:text-blue-600 text-sm font-semibold transition">
+              Log in
+            </a>
+
+            <a
+              href="/register"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 transition"
+            >
+              Sign up
+            </a>
+          <% } %>
         </div>
-    </nav>
+      </div>
+    </div>
+  </nav>
 
-    <%# Main container %>
-    <main class="container mx-auto px-4 py-8">
-        <%- include('flash') %>
+  <main class="flex-grow">
+
+    <%- include('flash') %>
+    

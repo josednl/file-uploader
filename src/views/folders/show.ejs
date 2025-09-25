@@ -1,157 +1,326 @@
+<%# Helper function to format file size in a human-readable way (e.g., 1.5 MB) %>
+<%
+  const formatBytes = (bytes, decimals = 2) => {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+%>
+
 <%- include('../partials/header', { title: folder.name }) %>
 
-<main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<main class="max-w-7xl mx-auto px-6 py-12">
 
-  <!-- Breadcrumb -->
-  <nav class="text-sm text-gray-500 mb-4">
-    <ul class="flex items-center space-x-2">
-      <li><a href="/folders/" class="hover:underline">Root</a></li>
-      <% breadcrumb.forEach((crumb, index) => { %>
-      <li>/</li>
+  <nav aria-label="Breadcrumb" class="text-sm text-gray-600 mb-8">
+    <ol class="flex flex-wrap items-center space-x-1">
       <li>
+        <a href="/folders/" class="hover:text-blue-600 font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3" />
+          </svg>
+          Root
+        </a>
+        <span aria-hidden="true" class="mx-2 text-gray-400">/</span>
+      </li>
+      <% breadcrumb.forEach((crumb, index) => { %>
+      <li class="flex items-center space-x-1">
         <% if (index === breadcrumb.length - 1) { %>
-        <span class="font-semibold text-gray-800"><%= crumb.name %></span>
+          <span aria-current="page" class="font-semibold text-gray-900"><%= crumb.name %></span>
         <% } else { %>
-        <a href="/folders/<%= crumb.id %>" class="hover:underline"><%= crumb.name %></a>
+          <a href="/folders/<%= crumb.id %>" class="hover:text-blue-600 font-medium"><%= crumb.name %></a>
+          <span aria-hidden="true" class="mx-2 text-gray-400">/</span>
         <% } %>
       </li>
       <% }) %>
-    </ul>
+    </ol>
   </nav>
 
-  <!-- Folder Heading + Actions -->
-  <div class="mb-6 flex justify-between items-center">
+  <header class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-10 gap-4">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900"><%= folder.name %></h1>
-      <p class="text-sm text-gray-500">Created at <%= folder.createdAt.toLocaleDateString() %></p>
+      <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-1"><%= folder.name %></h1>
+      <p class="text-gray-500 text-sm">
+        <time datetime="<%= folder.createdAt.toISOString() %>">
+          Created on <%= folder.createdAt.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) %>
+        </time>
+      </p>
     </div>
 
     <% if (permission === 'OWNER') { %>
-    <div class="flex gap-3">
-      <a href="/folders/edit/<%= folder.id %>" class="text-sm bg-yellow-500 text-white px-3 py-2 rounded hover:bg-yellow-600">Edit</a>
-      <form action="/folders/delete/<%= folder.id %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this folder and all its contents?');">
-        <button type="submit" class="text-sm bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700">Delete</button>
+    <div class="flex flex-wrap gap-3 mt-2 sm:mt-0">
+      <a href="/folders/edit/<%= folder.id %>" class="inline-flex items-center px-4 py-2 bg-yellow-400 hover:bg-yellow-500 rounded shadow text-white font-semibold text-sm transition focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z" />
+        </svg>
+        Edit Folder
+      </a>
+
+      <form action="/folders/delete/<%= folder.id %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this folder and all its contents? This action is irreversible.');">
+        <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 rounded shadow text-white font-semibold text-sm transition focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4" />
+          </svg>
+          Delete Folder
+        </button>
       </form>
     </div>
     <% } %>
+  </header>
 
+    <% if (permission === 'OWNER' || permission === 'EDIT') { %>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+    <section class="lg:col-span-1 bg-white border border-gray-200 rounded-xl p-6 shadow-md">
+      <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        </svg>
+        New Subfolder
+      </h2>
+      <form action="/folders/create" method="POST" class="flex flex-col gap-3">
+        <input type="hidden" name="parentId" value="<%= folder.id %>" />
+        <input
+          type="text"
+          name="name"
+          placeholder="Subfolder name"
+          required
+          maxlength="100"
+          class="flex-grow border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        />
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+          Create
+        </button>
+      </form>
+    </section>
+    
+    <section class="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-md">
+      <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 014 5v1h-1a7 7 0 00-7 7m-3 3h4m-2-2v4" />
+        </svg>
+        Upload File
+      </h2>
+      <form action="/files/upload" method="POST" enctype="multipart/form-data" class="flex flex-col md:flex-row md:items-center gap-4">
+        <input type="hidden" name="folderId" value="<%= folder.id %>">
+        <label class="block w-full md:flex-grow">
+          <span class="sr-only">Choose file</span>
+          <input type="file" name="file" required
+            class="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100 transition
+            "
+          />
+        </label>
+        <button type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow font-semibold transition w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+          Upload
+        </button>
+      </form>
+    </section>
+    <% } %>
   </div>
 
-  <!-- File Upload -->
-  <% if (permission === 'OWNER' || permission === 'EDIT') { %>
-  <div class="mb-10 border border-gray-300 p-4 rounded bg-gray-50">
-    <h2 class="text-lg font-semibold text-gray-800 mb-3">Upload a file to this folder</h2>
-    <form action="/files/upload" method="POST" enctype="multipart/form-data" class="flex items-center gap-4">
-      <input type="hidden" name="folderId" value="<%= folder.id %>">
-      <input type="file" name="file" required class="border border-gray-300 rounded px-4 py-2 text-sm">
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
-        Upload
-      </button>
-    </form>
-  </div>
-  <% } %>
+  ---
 
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H9l-2-2H5a2 2 0 00-2 2z" />
+      </svg>
+      Subfolders (<%= folder.children.length %>)
+    </h2>
 
-  <!-- Files in folder -->
-  <div class="mb-10">
-    <h2 class="text-xl font-semibold text-gray-800 mb-2">Files in this folder</h2>
+    <% if (folder.children.length === 0) { %>
+      <p class="text-gray-500 italic p-4 border rounded-lg bg-white">No subfolders in this location.</p>
+    <% } else { %>
+      <div class="overflow-x-auto bg-white rounded-xl shadow-lg border border-gray-100">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contents</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% folder.children.forEach(child => { %>
+              <tr class="hover:bg-gray-50 transition">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                  <a href="/folders/<%= child.id %>" class="flex items-center hover:underline">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-blue-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                    </svg>
+                    <%= child.name %>
+                  </a>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= child.fileCount %> files, <%= child.folderCount %> folders
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <a href="/folders/<%= child.id %>" class="text-blue-600 hover:text-blue-800">Open</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+
+  ---
+
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0013.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+      Files (<%= folder.files.length %>)
+    </h2>
 
     <% if (folder.files.length === 0) { %>
-    <p class="text-gray-500">This folder is empty.</p>
+      <p class="text-gray-500 italic p-4 border rounded-lg bg-white">No files have been uploaded to this folder yet.</p>
     <% } else { %>
-    <ul class="space-y-4">
-      <% folder.files.forEach(file => { %>
-      <li class="bg-white shadow rounded p-4 flex justify-between items-center">
-        <div>
-          <p class="font-medium text-gray-900"><%= file.name %></p>
-          <p class="text-sm text-gray-500"><%= file.mimeType %> • <%= (file.size / 1024).toFixed(1) %> KB</p>
+      <div class="overflow-x-auto bg-white rounded-xl shadow-lg border border-gray-100">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% folder.files.forEach(file => { %>
+              <tr class="hover:bg-gray-50 transition">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 max-w-xs truncate">
+                  <a href="/files/details/<%= file.id %>?from=/folders/<%= folder.id %>" class="hover:text-blue-600 hover:underline">
+                    <%= file.name %>
+                  </a>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= file.mimeType %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= formatBytes(file.size) %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div class="flex flex-wrap justify-end gap-3">
+                    <a href="/files/details/<%= file.id %>?from=/folders/<%= folder.id %>"
+                      class="text-blue-600 hover:text-blue-800 font-medium">
+                      View
+                    </a>
+
+                    <a href="/files/download/<%= file.id %>" class="text-green-600 hover:text-green-800 font-medium">
+                      Download
+                    </a>
+
+                    <% if (permission === 'OWNER' || permission === 'EDIT') { %>
+                    <form action="/files/delete/<%= file.id %>" method="POST" onsubmit="return confirm('Delete this file?');" class="inline">
+                      <button type="submit" class="text-red-600 hover:text-red-800 font-medium">
+                        Delete
+                      </button>
+                    </form>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+
+  ---
+
+  <% if (permission === 'OWNER' || permission === 'EDIT') { %>
+  <section class="mt-8 border-t pt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <div>
+      <h2 class="text-2xl font-bold mb-4 text-gray-900">Share with User</h2>
+      <form action="/folders/<%= folder.id %>/share" method="POST" class="flex flex-col gap-4 max-w-lg">
+        <div class="flex gap-2">
+          <input
+            type="email"
+            name="email"
+            placeholder="User email"
+            required
+            class="flex-grow border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <select name="permission" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="READ">Read Only</option>
+            <option value="EDIT">Can Edit</option>
+          </select>
         </div>
-        <div class="flex gap-3">
-          <a href="/files/details/<%= file.id %>?from=<%= folder ? ('/folders/' + folder.id) : '/files' %>" class="text-blue-600 hover:underline text-sm">View</a>
-          <a href="/files/download/<%= file.id %>" class="text-green-600 hover:underline text-sm">Download</a>
-          <form action="/folders/share/<%= folder.id %>/public" method="POST">
-            <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+          Share Folder
+        </button>
+      </form>
+
+      <% if (sharedUsers && sharedUsers.length > 0) { %>
+      <div class="mt-6">
+        <h3 class="text-lg font-semibold mb-2 text-gray-800">Shared with:</h3>
+        <ul class="list-disc list-inside text-gray-700 text-sm space-y-1 pl-4">
+          <% sharedUsers.forEach(item => { %>
+            <li class="flex justify-between items-center bg-gray-50 p-2 rounded">
+              <span><%= item.user.email %> — <strong class="capitalize"><%= item.permission.toLowerCase() %></strong></span>
+              </li>
+          <% }) %>
+        </ul>
+      </div>
+      <% } %>
+    </div>
+
+    <div>
+      <h2 class="text-2xl font-bold mb-4 text-gray-900">Public Link</h2>
+      <% if (folder.publicShare) { %>
+        <div class="bg-green-50 border border-green-200 p-4 rounded-lg shadow-sm">
+          <p class="font-semibold text-green-800 mb-2 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3.2 3.2a1 1 0 01-1.414 0 1 1 0 010-1.414l3.2-3.2zm-2.828 7.07a2 2 0 11-2.828-2.828l3.2-3.2a1 1 0 011.414 0 1 1 0 010 1.414l-3.2 3.2zM4 12a2 2 0 100 4 2 2 0 000-4z" clip-rule="evenodd" />
+            </svg>
+            Public link is Active:
+          </p>
+          <div class="flex items-center gap-3">
+            <input type="text" value="/shared/<%= folder.publicShare.token %>" readonly
+              class="flex-grow border border-gray-300 bg-white rounded-lg px-4 py-2 text-sm truncate"
+              onclick="this.select(); document.execCommand('copy'); alert('Link copied!');"
+              title="Click to copy link"
+            />
+            <form action="/folders/unshare/<%= folder.id %>/public" method="POST" onsubmit="return confirm('Are you sure you want to disable the public link?');">
+              <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold text-sm transition shadow-md">
+                Disable Link
+              </button>
+            </form>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm">
+          <p class="text-gray-700 mb-4">No public link currently available for this folder.</p>
+          <form action="/folders/share/<%= folder.id %>/public" method="POST" class="inline">
+            <button type="submit"
+              class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg shadow font-semibold transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.893 9 12.443 9 12h2c0 .444.114.893.316 1.342l2.364 2.364A.5.5 0 0113.636 17H5.364a.5.5 0 01-.354-.854l2.364-2.364zM12 4a8 8 0 100 16A8 8 0 0012 4z" />
+              </svg>
               Generate Public Link
             </button>
           </form>
-
-          <% if (folder.publicShare) { %>
-          <p class="mt-2 text-sm text-gray-600">
-            Public Link: <a class="text-blue-600 underline" href="/shared/<%= folder.publicShare.token %>" target="_blank">
-              /shared/<%= folder.publicShare.token %>
-            </a>
-          </p>
-          <% } %>
-
-          <% if (permission === 'OWNER' || permission === 'EDIT') { %>
-          <form action="/files/delete/<%= file.id %>" method="POST" onsubmit="return confirm('Delete this file?');">
-            <button type="submit" class="text-red-600 hover:underline text-sm">Delete</button>
-          </form>
-          <% } %>
-
         </div>
-      </li>
-      <% }) %>
-    </ul>
-    <% } %>
-  </div>
+      <% } %>
+    </div>
 
-  <!-- Subfolders -->
-  <div class="mb-10">
-    <h2 class="text-xl font-semibold text-gray-800 mb-2">Subfolders</h2>
-    <% if (folder.children.length === 0) { %>
-    <p class="text-gray-500">No subfolders yet.</p>
-    <% } else { %>
-    <ul class="space-y-3">
-      <% folder.children.forEach(child => { %>
-      <li>
-        <a href="/folders/<%= child.id %>" class="text-blue-600 hover:underline">
-          📁 <%= child.name %>
-        </a>
-      </li>
-      <% }) %>
-    </ul>
-    <% } %>
-  </div>
-
-  <!-- Create Subfolder Form -->
-  <div class="border-t pt-6 mt-6">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Create a Subfolder</h2>
-    <form action="/folders/create" method="POST" class="flex items-center gap-4">
-      <input type="hidden" name="parentId" value="<%= folder.id %>">
-      <input type="text" name="name" placeholder="Subfolder name" required class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:border-blue-300" />
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-        Create
-      </button>
-    </form>
-  </div>
-
-  <% if (permission === 'OWNER' || permission === 'EDIT') { %>
-  <!-- Share Folder Form -->
-  <div class="border-t pt-6 mt-6">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Share this Folder</h2>
-    <form action="/folders/<%= folder.id %>/share" method="POST" class="space-y-4 sm:flex sm:items-center sm:gap-4">
-      <input type="email" name="email" placeholder="User email" required class="w-full border border-gray-300 rounded px-4 py-2" />
-      <select name="permission" class="border border-gray-300 rounded px-4 py-2">
-        <option value="READ">Read Only</option>
-        <option value="EDIT">Can Edit</option>
-      </select>
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Share</button>
-    </form>
-  </div>
+  </section>
   <% } %>
 
-  <!-- Shared Users -->
-  <% if (sharedUsers && sharedUsers.length > 0) { %>
-  <div class="mt-6">
-    <h3 class="text-lg font-semibold mb-2">Shared with:</h3>
-    <ul class="list-disc pl-5 text-gray-700 text-sm">
-      <% sharedUsers.forEach(item => { %>
-      <li><%= item.user.email %> — <%= item.permission %></li>
-      <% }) %>
-    </ul>
-  </div>
-  <% } %>
 </main>
 
 <%- include('../partials/footer') %>

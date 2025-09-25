@@ -6,7 +6,7 @@ import { hasAccessToFolderRecursively } from '../../folders/services/folder.serv
 const prisma = new PrismaClient();
 const UPLOADS_DIR = path.resolve('uploads');
 
-// 📄 Obtener archivos del usuario
+// Get user's files
 export const findFilesByOwner = async (ownerId: string): Promise<File[]> => {
   return prisma.file.findMany({
     where: { ownerId },
@@ -14,7 +14,7 @@ export const findFilesByOwner = async (ownerId: string): Promise<File[]> => {
   });
 };
 
-// 📤 Crear registro de archivo subido
+// Create uploaded file record
 export const createFileRecord = async (
   fileData: Express.Multer.File,
   ownerId: string,
@@ -32,7 +32,7 @@ export const createFileRecord = async (
   });
 };
 
-// 🗑 Eliminar archivo (registro + disco)
+// Delete file record and remove from disk
 export const deleteFileRecordAndFromDisk = async (
   fileId: string,
   userId: string,
@@ -67,7 +67,7 @@ export const deleteFileRecordAndFromDisk = async (
   }
 };
 
-// 🔍 Buscar archivo por ID con su carpeta (solo si es del dueño)
+// Find file by ID and owner, including folder info
 export const findFileByIdAndOwnerWithFolder = async (
   fileId: string,
   ownerId: string
@@ -78,7 +78,7 @@ export const findFileByIdAndOwnerWithFolder = async (
   });
 };
 
-// 📁 Obtener carpetas para mover archivos
+// Get folders owned by user
 export const findFoldersByOwner = async (ownerId: string) => {
   return prisma.folder.findMany({
     where: { ownerId },
@@ -86,7 +86,7 @@ export const findFoldersByOwner = async (ownerId: string) => {
   });
 };
 
-// 🔁 Mover archivo a otra carpeta
+// Move file to another folder 
 export const moveFileToFolder = async (
   fileId: string,
   ownerId: string,
@@ -98,7 +98,7 @@ export const moveFileToFolder = async (
   });
 };
 
-// 🔒 Buscar archivo con acceso válido para el usuario
+// Find file by ID and check if user has access (owner or via shared folder)
 export const findAccessibleFile = async (
   fileId: string,
   userId: string

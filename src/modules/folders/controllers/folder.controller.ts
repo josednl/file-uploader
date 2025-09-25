@@ -18,7 +18,7 @@ import {
 
 import { getUserId } from '../../../utils/auth';
 
-// Listar carpetas raíz del usuario
+// GET /folders
 export const listRootFolders = async (req: Request, res: Response) => {
   const ownerId = getUserId(req);
   try {
@@ -31,14 +31,14 @@ export const listRootFolders = async (req: Request, res: Response) => {
   }
 };
 
-// Mostrar formulario para crear carpeta
+// GET /folders/create
 export const createFolderForm = async (req: Request, res: Response) => {
   const ownerId = getUserId(req);
   const folders = await getAllFoldersForUser(ownerId);
   res.render('folders/create', { folders });
 };
 
-// Manejar creación de carpeta
+// POST /folders/create
 export const createFolderHandler = async (req: Request, res: Response) => {
   const ownerId = getUserId(req);
   const { name, parentId } = req.body;
@@ -54,7 +54,7 @@ export const createFolderHandler = async (req: Request, res: Response) => {
   }
 };
 
-// Ver carpeta y su contenido
+// GET /folders/:id
 export const viewFolder = async (req: Request, res: Response) => {
   const folderId = req.params.id;
   const ownerId = getUserId(req);
@@ -78,7 +78,7 @@ export const viewFolder = async (req: Request, res: Response) => {
   res.render('folders/show', { folder, breadcrumb, sharedUsers, permission });
 };
 
-// Mostrar formulario para editar carpeta
+// GET /folders/edit/:id
 export const editFolderForm = async (req: Request, res: Response) => {
   const ownerId = getUserId(req);
   const folderId = req.params.id;
@@ -94,7 +94,7 @@ export const editFolderForm = async (req: Request, res: Response) => {
   res.render('folders/edit', { folder, folders });
 };
 
-// Manejar actualización de carpeta
+// POST /folders/edit/:id
 export const updateFolderHandler = async (req: Request, res: Response) => {
   const ownerId = getUserId(req);
   const folderId = req.params.id;
@@ -120,7 +120,7 @@ export const updateFolderHandler = async (req: Request, res: Response) => {
   }
 };
 
-// Manejar eliminación de carpeta
+// POST /folders/delete/:id
 export const deleteFolderHandler = async (req: Request, res: Response) => {
   const ownerId = getUserId(req);
   const folderId = req.params.id;
@@ -145,7 +145,7 @@ export const deleteFolderHandler = async (req: Request, res: Response) => {
   }
 };
 
-// Crear enlace público para carpeta
+// POST /folders/share/:id/public
 export const createPublicShareHandler = async (req: Request, res: Response) => {
   const folderId = req.params.id;
 
@@ -160,7 +160,7 @@ export const createPublicShareHandler = async (req: Request, res: Response) => {
   }
 };
 
-// Ver carpeta compartida públicamente
+// GET /folders/shared/:token
 export const viewSharedFolder = async (req: Request, res: Response) => {
   const token = req.params.token;
 
@@ -172,7 +172,7 @@ export const viewSharedFolder = async (req: Request, res: Response) => {
   res.render('folders/shared_public', { folder });
 };
 
-// Compartir carpeta con usuario
+// POST /folders/:id/share
 export const handleShareFolder = async (req: Request, res: Response) => {
   const folderId = req.params.id;
   const { email, permission } = req.body;
@@ -187,7 +187,7 @@ export const handleShareFolder = async (req: Request, res: Response) => {
   res.redirect(`/folders/${folderId}`);
 };
 
-// Listar carpetas compartidas con el usuario
+// GET /folders/shared
 export const listSharedFolders = async (req: Request, res: Response) => {
   const userId = getUserId(req);
 

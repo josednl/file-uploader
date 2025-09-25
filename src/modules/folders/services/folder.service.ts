@@ -5,23 +5,23 @@ import { folderFullInclude, folderMinimalInclude, folderWithRelationsInclude } f
 
 const prisma = new PrismaClient();
 
-// Obtener carpetas raíz del usuario
+// Get root folders for a user
 export const getRootFoldersByOwner = async (ownerId: string): Promise<Folder[]> => {
   return prisma.folder.findMany({
     where: { ownerId, parentId: null },
-    include: folderMinimalInclude,
+    include: folderWithRelationsInclude,
     orderBy: { createdAt: 'desc' },
   });
 };
 
-// Crear nueva carpeta
+// Create a new folder
 export const createFolder = async (name: string, ownerId: string, parentId?: string | null) => {
   return prisma.folder.create({
     data: { name, ownerId, parentId: parentId || null },
   });
 };
 
-// Obtener todas las carpetas del usuario
+// Get all folders for a user
 export const getAllFoldersForUser = async (ownerId: string): Promise<Folder[]> => {
   return prisma.folder.findMany({
     where: { ownerId },
@@ -29,7 +29,7 @@ export const getAllFoldersForUser = async (ownerId: string): Promise<Folder[]> =
   });
 };
 
-// Obtener carpeta con archivos e hijos
+// Get folder by ID with relations
 export const getFolderByIdWithContents = async (folderId: string): Promise<Folder | null> => {
   return prisma.folder.findUnique({
     where: { id: folderId },
@@ -37,7 +37,7 @@ export const getFolderByIdWithContents = async (folderId: string): Promise<Folde
   });
 };
 
-// Obtener breadcrumb (jerarquía de padres)
+// Get breadcrumb for a folder
 export async function getFolderBreadcrumb(folderId: string): Promise<Folder[]> {
   const breadcrumb: Folder[] = [];
 
@@ -52,7 +52,7 @@ export async function getFolderBreadcrumb(folderId: string): Promise<Folder[]> {
   return breadcrumb;
 }
 
-// Actualizar carpeta
+// Update folder details
 export const updateFolder = async (
   folderId: string,
   ownerId: string,
@@ -73,7 +73,7 @@ export const updateFolder = async (
   });
 };
 
-// Eliminar carpeta y su contenido recursivamente
+// Delete folder and its contents recursively
 export const deleteFolderAndContents = async (
   folderId: string,
   ownerId: string,
@@ -111,7 +111,7 @@ export const deleteFolderAndContents = async (
   }
 };
 
-// Crear enlace público para carpeta
+// Create public share for a folder
 export const createPublicShare = async (folderId: string) => {
   const token = crypto.randomBytes(20).toString('hex');
 
@@ -120,7 +120,7 @@ export const createPublicShare = async (folderId: string) => {
   });
 };
 
-// Obtener carpeta compartida públicamente por token
+// Get folder by public share token
 export const getFolderByPublicToken = async (token: string) => {
   const share = await prisma.publicFolderShare.findUnique({
     where: { token },
@@ -132,7 +132,7 @@ export const getFolderByPublicToken = async (token: string) => {
   return share?.folder || null;
 };
 
-// Compartir carpeta con usuario por email
+// Share folder with a user
 export const shareFolderWithUser = async (
   folderId: string,
   userEmail: string,
@@ -153,7 +153,7 @@ export const shareFolderWithUser = async (
   });
 };
 
-// Obtener usuarios con acceso compartido a una carpeta
+// Get users with whom a folder is shared
 export const getSharedUsersForFolder = async (folderId: string) => {
   return prisma.sharedFolder.findMany({
     where: { folderId },
@@ -161,7 +161,7 @@ export const getSharedUsersForFolder = async (folderId: string) => {
   });
 };
 
-// Obtener carpetas compartidas con un usuario
+// Get folders shared with a user
 export const getFoldersSharedWithUser = async (userId: string) => {
   return prisma.sharedFolder.findMany({
     where: { userId },
@@ -175,7 +175,7 @@ export const getFoldersSharedWithUser = async (userId: string) => {
   });
 };
 
-// Comprobación recursiva de acceso a carpeta
+// Check if user has access to folder (directly or via parent)
 export async function hasAccessToFolderRecursively(folderId: string, userId: string): Promise<boolean> {
   let current = await prisma.folder.findUnique({
     where: { id: folderId },
@@ -200,7 +200,7 @@ export async function hasAccessToFolderRecursively(folderId: string, userId: str
   return false;
 }
 
-// Buscar carpeta accesible con permisos
+// Find folder if user has access
 export async function findAccessibleFolder(folderId: string, userId: string): Promise<Folder | null> {
   const folder = await prisma.folder.findUnique({
     where: { id: folderId },
@@ -213,7 +213,7 @@ export async function findAccessibleFolder(folderId: string, userId: string): Pr
   return hasAccess ? folder : null;
 }
 
-// Obtener permisos de usuario para una carpeta
+// Get user's permission for a folder (considering inheritance)
 export async function getUserPermissionForFolder(
   folderId: string,
   userId: string

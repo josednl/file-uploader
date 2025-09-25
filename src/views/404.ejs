@@ -1,20 +1,36 @@
 <%- include('partials/header', { title: '404 - Page Not Found' }) %>
 
-<div class="min-h-[calc(100vh-theme(space.32))] flex flex-col items-center justify-center">
-    <div class="max-w-md w-full text-center space-y-6">
-        <div class="space-y-4">
-            <i class="fas fa-search text-6xl text-gray-400"></i>
-            <h1 class="text-9xl font-bold text-blue-600">404</h1>
-            <h2 class="text-2xl font-semibold text-gray-800">Page Not Found</h2>
-            <p class="text-gray-600">Sorry, the page you're looking for doesn't exist or has been moved.</p>
-        </div>
-        
-        <div class="mt-8">
-            <a href="/" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition duration-200">
-                <i class="fas fa-home mr-2"></i>Back to Home
-            </a>
-        </div>
+<div class="min-h-screen flex flex-col items-center justify-center px-6 py-16 sm:px-8 lg:px-12">
+  <div class="max-w-xl w-full text-center space-y-8 bg-white p-10 sm:p-12 rounded-2xl shadow-2xl border border-gray-200">
+    
+    <div class="flex justify-center mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-blue-600 animate-bounce-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
     </div>
+
+    <h1 class="text-7xl sm:text-8xl font-extrabold text-blue-600 tracking-tight">404</h1>
+    
+    <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+      Oops! Page Not Found
+    </h2>
+    
+    <p class="text-lg text-gray-600 max-w-md mx-auto">
+      The resource you're trying to reach doesn't exist, might have been moved, or you followed an outdated link.
+    </p>
+
+    <div class="mt-10">
+      <a
+        href="/"
+        class="inline-flex items-center px-8 py-3 text-lg text-white bg-blue-600 hover:bg-blue-700 font-semibold rounded-lg transition shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-300 gap-2"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        Go Back to Dashboard
+      </a>
+    </div>
+  </div>
 </div>
 
 <%- include('partials/footer') %>

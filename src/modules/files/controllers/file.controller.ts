@@ -12,7 +12,7 @@ import {
 
 import { getUserId } from '../../../utils/auth';
 
-// 📄 GET /files
+// GET /files
 export const listFiles = async (req: Request, res: Response) => {
   const ownerId = getUserId(req);
 
@@ -25,7 +25,7 @@ export const listFiles = async (req: Request, res: Response) => {
   }
 };
 
-// 📤 POST /files/upload
+// POST /files/upload
 export const uploadFile = async (req: Request, res: Response) => {
   const ownerId = getUserId(req);
   const folderId = req.body.folderId || null;
@@ -46,7 +46,7 @@ export const uploadFile = async (req: Request, res: Response) => {
   }
 };
 
-// 📥 GET /files/download/:id
+// GET /files/download/:id
 export const downloadFile = async (req: Request, res: Response) => {
   const fileId = req.params.id;
   const userId = getUserId(req);
@@ -68,7 +68,7 @@ export const downloadFile = async (req: Request, res: Response) => {
   }
 };
 
-// 🗑 POST /files/delete/:id
+// POST /files/delete/:id
 export const deleteFile = async (req: Request, res: Response) => {
   const fileId = req.params.id;
   const ownerId = getUserId(req);
@@ -94,7 +94,7 @@ export const deleteFile = async (req: Request, res: Response) => {
   }
 };
 
-// 🔍 GET /files/:id
+// GET /files/details/:id
 export const getFileDetails = async (req: Request, res: Response) => {
   const fileId = req.params.id;
   const ownerId = getUserId(req);
@@ -116,7 +116,7 @@ export const getFileDetails = async (req: Request, res: Response) => {
   }
 };
 
-// 📦 GET /files/move/:id
+// GET /files/move/:id
 export const showMoveFileForm = async (req: Request, res: Response) => {
   const fileId = req.params.id;
   const ownerId = getUserId(req);
@@ -138,7 +138,7 @@ export const showMoveFileForm = async (req: Request, res: Response) => {
   }
 };
 
-// 📦 POST /files/move/:id
+// POST /files/move/:id
 export const handleMoveFile = async (req: Request, res: Response) => {
   const fileId = req.params.id;
   const ownerId = getUserId(req);

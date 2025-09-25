@@ -1,83 +1,116 @@
+<%
+  const formatBytes = (bytes, decimals = 2) => {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+  
+%>
+
 <%- include('../partials/header', { title: 'Dashboard' }) %>
 
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="text-center mb-12">
-        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Welcome back, <%= user.name %>!</h1>
-        <p class="text-lg text-gray-600">Here’s a quick overview of your file management options.</p>
+<main class="max-w-7xl mx-auto px-6 py-12">
+  
+  <section class="mb-12 text-center border-b pb-6">
+    <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">Welcome Back, <%= user.name.split(' ')[0] %>! 🚀</h1>
+    <p class="text-lg text-gray-600">Your central hub for managing files and collaboration.</p>
+  </section>
+
+  
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+    
+    <a href="/files" class="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition p-6 group block">
+      <div class="flex items-center justify-center w-12 h-12 mb-4 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0013.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 group-hover:text-blue-600 transition mb-1">My Files</h3>
+      <p class="text-sm text-gray-500">Browse and manage all your uploaded files.</p>
+      <span class="inline-flex items-center text-sm font-medium text-blue-600 group-hover:text-blue-700 mt-4 transition">
+        Go to Files
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </span>
+    </a>
+
+    <a href="/folders/shared" class="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition p-6 group block">
+      <div class="flex items-center justify-center w-12 h-12 mb-4 rounded-full bg-green-50 text-green-600 group-hover:bg-green-600 group-hover:text-white transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 group-hover:text-green-600 transition mb-1">Shared with Me</h3>
+      <p class="text-sm text-gray-500">Access folders shared by your collaborators.</p>
+      <span class="inline-flex items-center text-sm font-medium text-green-600 group-hover:text-green-700 mt-4 transition">
+        View Shared
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </span>
+    </a>
+
+    <a href="/files/upload" class="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition p-6 group block">
+      <div class="flex items-center justify-center w-12 h-12 mb-4 rounded-full bg-yellow-50 text-yellow-600 group-hover:bg-yellow-600 group-hover:text-white transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 group-hover:text-yellow-600 transition mb-1">Upload Files</h3>
+      <p class="text-sm text-gray-500">Quickly upload new documents and media.</p>
+      <span class="inline-flex items-center text-sm font-medium text-yellow-600 group-hover:text-yellow-700 mt-4 transition">
+        Start Upload
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </span>
+    </a>
+  </section>
+
+  ---
+
+  <section>
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">My Latest Folders</h2>
+      <a href="/folders" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-gray-300">
+        View All (Root folders)
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </a>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- My Files -->
-        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 flex flex-col justify-between">
-            <div>
-                <div class="bg-blue-100 text-blue-600 rounded-full w-12 h-12 flex items-center justify-center mb-4 text-xl">
-                    <i class="fas fa-folder-open"></i>
-                </div>
-                <h3 class="text-lg font-semibold mb-2">My Files</h3>
-                <p class="text-sm text-gray-600">Browse and manage your uploaded files.</p>
+    <% if (folders && folders.length === 0) { %>
+      <div class="text-center bg-gray-50 p-6 rounded-xl border border-dashed border-gray-300">
+        <p class="text-gray-500">You don’t have any folders yet. Click "New Folder" to get started!</p>
+      </div>
+    <% } else if (folders) { %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <% folders.slice(0, 4).forEach(folder => { %> <%# Limit to 4 for a quick view %>
+          <a href="/folders/<%= folder.id %>" class="group block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg p-4 transition">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 flex items-center justify-center text-yellow-500 group-hover:text-yellow-600 transition flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-800 group-hover:text-blue-600 truncate transition"><%= folder.name %></h3>
+                <p class="text-xs text-gray-500 mt-0.5">Created <%= folder.createdAt.toLocaleDateString() %></p>
+              </div>
             </div>
-            <a href="/files" class="mt-4 inline-flex items-center text-blue-600 text-sm font-medium hover:underline">
-                View files <i class="fas fa-arrow-right ml-2"></i>
-            </a>
-        </div>
-
-        <!-- Shared Folders -->
-        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 flex flex-col justify-between">
-            <div>
-                <div class="bg-green-100 text-green-600 rounded-full w-12 h-12 flex items-center justify-center mb-4 text-xl">
-                    <i class="fas fa-users"></i>
-                </div>
-                <h3 class="text-lg font-semibold mb-2">Shared Folders</h3>
-                <p class="text-sm text-gray-600">Access folders shared with you by others.</p>
-            </div>
-            <a href="/folders/shared" class="mt-4 inline-flex items-center text-green-600 text-sm font-medium hover:underline">
-                Go to folders <i class="fas fa-arrow-right ml-2"></i>
-            </a>
-        </div>
-
-        <!-- Upload Files -->
-        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 flex flex-col justify-between">
-            <div>
-                <div class="bg-yellow-100 text-yellow-600 rounded-full w-12 h-12 flex items-center justify-center mb-4 text-xl">
-                    <i class="fas fa-upload"></i>
-                </div>
-                <h3 class="text-lg font-semibold mb-2">Upload Files</h3>
-                <p class="text-sm text-gray-600">Quickly upload new files to your account.</p>
-            </div>
-            <a href="/files/upload" class="mt-4 inline-flex items-center text-yellow-600 text-sm font-medium hover:underline">
-                Upload now <i class="fas fa-arrow-right ml-2"></i>
-            </a>
-        </div>
-
-        <section>
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-semibold text-gray-800">My Folders</h2>
-                <a href="/folders/new" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700">
-                    <i class="fas fa-plus mr-2"></i> New Folder
-                </a>
-            </div>
-
-            <% if (folders.length === 0) { %>
-                <p class="text-gray-500">You don’t have any folders yet.</p>
-            <% } else { %>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <% folders.forEach(folder => { %>
-                        <a href="/folders/<%= folder.id %>" class="block bg-white rounded-lg shadow hover:shadow-md p-4 border hover:border-blue-500 transition">
-                            <div class="flex items-center space-x-3">
-                                <div class="bg-blue-100 text-blue-600 rounded-full w-10 h-10 flex items-center justify-center">
-                                    <i class="fas fa-folder"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-md font-semibold text-gray-900"><%= folder.name %></h3>
-                                    <p class="text-xs text-gray-500">Created at <%= folder.createdAt.toLocaleDateString() %></p>
-                                </div>
-                            </div>
-                        </a>
-                    <% }) %>
-                </div>
-            <% } %>
-        </section>
-    </div>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
 </main>
 
 <%- include('../partials/footer') %>

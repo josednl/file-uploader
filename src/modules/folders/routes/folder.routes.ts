@@ -18,7 +18,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/', requireAuth, listRootFolders);
-router.get('/new', createFolderForm);
+router.get('/create', createFolderForm);
 router.post('/create', createFolderHandler);
 router.get('/shared', listSharedFolders);
 router.get('/:id', viewFolder);

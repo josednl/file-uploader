@@ -1,31 +1,90 @@
+<%# Helper function for conditional pluralization and counts %>
+<%
+  const getCountsText = (folder) => {
+    let parts = [];
+    if (folder.children && folder.children.length > 0) {
+      parts.push(`${folder.children.length} folder${folder.children.length !== 1 ? 's' : ''}`);
+    }
+    // Assuming fileCount is available on the folder object for this list
+    if (folder.fileCount > 0) {
+      parts.push(`${folder.fileCount} file${folder.fileCount !== 1 ? 's' : ''}`);
+    }
+    
+    if (parts.length === 0) {
+      return 'Empty';
+    }
+    return parts.join(' & ');
+  }
+%>
+
 <%- include('../partials/header', { title: 'My Folders' }) %>
 
-<main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-gray-900">My Folders</h1>
-    <a href="/folders/create" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
-      + New Folder
+<main class="max-w-7xl mx-auto px-6 py-12">
+
+  <header class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-10 pb-4 border-b">
+    <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+      </svg>
+      My Folders
+    </h1>
+    <a href="/folders/create" 
+       class="mt-4 sm:mt-0 inline-flex items-center px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm transition shadow-md">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+      </svg>
+      New Folder
     </a>
-  </div>
+  </header>
 
   <% if (folders.length === 0) { %>
-    <p class="text-gray-500">You don’t have any folders yet.</p>
+    <div class="text-center bg-gray-50 p-12 rounded-xl border border-dashed border-gray-300 space-y-4 shadow-inner">
+      <p class="text-lg text-gray-600">You don’t have any folders yet. Get organized!</p>
+      <a href="/folders/create" 
+         class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition shadow-md">
+        Create Your First Folder
+      </a>
+    </div>
   <% } else { %>
-    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       <% folders.forEach(folder => { %>
-        <li class="bg-white shadow rounded p-4">
-          <h2 class="text-lg font-semibold text-gray-800 mb-1">
-            <a href="/folders/<%= folder.id %>" class="hover:underline"><%= folder.name %></a>
-          </h2>
-          <p class="text-sm text-gray-500">
-            <%= folder.children.length %> subfolder<%= folder.children.length !== 1 ? 's' : '' %>
-          </p>
-          <a href="/folders/edit/<%= folder.id %>" class="text-blue-600 text-sm hover:underline mt-2 inline-block">
-            Edit
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between overflow-hidden">
+          
+          <a href="/folders/<%= folder.id %>" class="p-5 block hover:bg-gray-50 transition flex-grow focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-t-xl">
+            <div class="flex items-start justify-between">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-500 flex-shrink-0 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+              </svg>
+              <h2 class="text-lg font-bold text-gray-800 break-words flex-grow">
+                <%= folder.name %>
+              </h2>
+            </div>
+            
+            <div class="mt-4 text-sm text-gray-500">
+              <p class="font-medium text-gray-600 mb-1">
+                <span class="text-xs font-semibold uppercase tracking-wider">Contents:</span>
+                <span class="block text-base mt-0.5"><%= folder.children.length %> folder(s)</span>
+                <span class="block text-base mt-0.5"><%= folder.files.length %> file(s)</span>
+              </p>
+              
+              <% if (folder.createdAt) { %>
+              <p class="mt-2">
+                Created: <%= new Date(folder.createdAt).toLocaleDateString() %>
+              </p>
+              <% } %>
+            </div>
           </a>
-        </li>
+
+          <div class="flex justify-end p-3 bg-gray-50 border-t">
+            <a href="/folders/edit/<%= folder.id %>" 
+               class="text-blue-600 text-sm font-medium hover:text-blue-800 transition px-2 py-1 rounded hover:bg-white"
+               aria-label="Edit folder <%= folder.name %>">
+              Edit Details
+            </a>
+          </div>
+        </div>
       <% }) %>
-    </ul>
+    </div>
   <% } %>
 </main>
 
