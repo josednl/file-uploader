@@ -1,14 +1,9 @@
-<%# Helper function to generate folder path/indentation %>
 <%
-  // NOTE: This helper assumes your 'folders' array contains folder objects 
-  // with a property like 'level' or 'pathName' to indicate hierarchy.
   const getFolderLabel = (folder) => {
-    // If you have a 'pathName' (e.g., 'Root / Docs / ProjectX'), use that:
     if (folder.pathName) {
       return folder.pathName;
     }
     
-    // If you have a 'level' for indentation:
     const indent = folder.level ? '—'.repeat(folder.level) : '';
     return `${indent} ${folder.name}`;
   }
@@ -46,7 +41,6 @@
           </option>
           
           <% folders.forEach(folder => { 
-            // Check if the current folder is the file's current location to disable it
             const isDisabled = file.folder && folder.id === file.folder.id;
           %>
             <option 

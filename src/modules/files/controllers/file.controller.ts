@@ -52,15 +52,15 @@ export const downloadFile = async (req: Request, res: Response) => {
   const userId = getUserId(req);
 
   try {
-    const file = await findAccessibleFile(fileId, userId);
+    const result = await findAccessibleFile(fileId, userId);
 
-    if (!file) {
+    if (!result) {
       req.flash('error', 'File not found or access denied');
       return res.redirect('/files');
     }
 
-    const absolutePath = path.resolve('uploads', file.path);
-    res.download(absolutePath, file.name);
+    const absolutePath = path.resolve('uploads', result.file.path);
+    res.download(absolutePath, result.file.name);
   } catch (error) {
     console.error('Error downloading file:', error);
     req.flash('error', 'Failed to download file');
@@ -74,14 +74,14 @@ export const deleteFile = async (req: Request, res: Response) => {
   const ownerId = getUserId(req);
 
   try {
-    const file = await findAccessibleFile(fileId, ownerId);
+    const result = await findAccessibleFile(fileId, ownerId);
 
-    if (!file) {
+    if (!result || (result.permission !== 'EDIT' && result.permission !== 'OWNER')) {
       req.flash('error', 'File not found or access denied');
       return res.redirect('/files');
     }
 
-    const folderId = file.folderId;
+    const folderId = result.file.folderId;
 
     await deleteFileRecordAndFromDisk(fileId, ownerId);
 
@@ -101,13 +101,13 @@ export const getFileDetails = async (req: Request, res: Response) => {
   const from = req.query.from?.toString();
 
   try {
-    const file = await findAccessibleFile(fileId, ownerId);
+    const result = await findAccessibleFile(fileId, ownerId);
 
-    if (!file) {
+    if (!result) {
       req.flash('error', 'File not found or access denied');
       return res.redirect('/files');
     }
-
+    const file = result.file;
     res.render('files/details', { file, from });
   } catch (error) {
     console.error('Error fetching file details:', error);

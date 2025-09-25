@@ -93,7 +93,7 @@
       </div>
     <% } else if (folders) { %>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <% folders.slice(0, 4).forEach(folder => { %> <%# Limit to 4 for a quick view %>
+        <% folders.slice(0, 4).forEach(folder => { %>
           <a href="/folders/<%= folder.id %>" class="group block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg p-4 transition">
             <div class="flex items-center space-x-3">
               <div class="w-8 h-8 flex items-center justify-center text-yellow-500 group-hover:text-yellow-600 transition flex-shrink-0">

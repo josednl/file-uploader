@@ -122,21 +122,41 @@ export const updateFolderHandler = async (req: Request, res: Response) => {
 
 // POST /folders/delete/:id
 export const deleteFolderHandler = async (req: Request, res: Response) => {
-  const ownerId = getUserId(req);
+  const userId = getUserId(req);
   const folderId = req.params.id;
 
-  const permission = await getUserPermissionForFolder(folderId, ownerId);
-  if (permission !== 'OWNER') {
-    req.flash('error', 'Only the owner can perform this action.');
-    return res.redirect(`/folders/${folderId}`);
-  }
-
   try {
-    const folder = await getFolderByIdWithContents(folderId);
-    const parentId = folder?.parentId;
+    const permission = await getUserPermissionForFolder(folderId, userId);
 
-    await deleteFolderAndContents(folderId, ownerId);
+    if (!permission) {
+      req.flash('error', 'Access denied.');
+      return res.redirect('/dashboard');
+    }
+
+    const folder = await getFolderByIdWithContents(folderId);
+    if (!folder) {
+      req.flash('error', 'Folder not found');
+      return res.redirect('/dashboard');
+    }
+
+    const isOwner = folder.ownerId === userId;
+    const isRoot = folder.parentId === null;
+
+    if (isRoot && !isOwner) {
+      req.flash('error', 'Only the owner can delete the root folder.');
+      return res.redirect(`/folders/${folderId}`);
+    }
+
+    if (permission === 'EDIT' && !isRoot) {
+    } else if (permission === 'EDIT' && isRoot) {
+      req.flash('error', 'You cannot delete a shared root folder.');
+      return res.redirect(`/folders/${folderId}`);
+    }
+
+    await deleteFolderAndContents(folderId, userId);
+
     req.flash('success', 'Folder deleted successfully');
+    const parentId = folder.parentId;
     res.redirect(parentId ? `/folders/${parentId}` : '/dashboard');
   } catch (err) {
     console.error(err);

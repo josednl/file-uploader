@@ -1,19 +1,13 @@
-<%# Helper function to generate folder path/indentation (Requires 'level' or 'pathName' on folder objects) %>
 <%
-  // NOTE: This helper assumes your 'folders' array contains folder objects 
-  // with a property like 'level' or 'pathName' to indicate hierarchy.
   const getFolderLabel = (f) => {
-    // If you have a 'pathName' (e.g., 'Root / Docs / ProjectX'), use that:
     if (f.pathName) {
       return f.pathName;
     }
-    
-    // If you have a 'level' for indentation:
+
     const indent = f.level ? '—'.repeat(f.level) : '';
     return `${indent} ${f.name}`;
   }
 
-  // Determine return URL based on parentId
   const returnUrl = folder.parentId ? `/folders/${folder.parentId}` : '/folders';
 %>
 
@@ -53,9 +47,8 @@
           </option>
           <% folders.forEach(f => { %>
             <%
-              // Prevent selecting the folder itself or any of its children as parent (not shown here, but a backend/frontend concern)
               const isCurrentFolder = f.id === folder.id; 
-              const isDisabled = isCurrentFolder; // Simplified: only disable the current folder itself
+              const isDisabled = isCurrentFolder;
             %>
             <option value="<%= f.id %>" 
                     <%= folder.parentId === f.id ? 'selected' : '' %>

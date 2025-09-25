@@ -1,11 +1,9 @@
-<%# Helper function for conditional pluralization and counts %>
 <%
   const getCountsText = (folder) => {
     let parts = [];
     if (folder.children && folder.children.length > 0) {
       parts.push(`${folder.children.length} folder${folder.children.length !== 1 ? 's' : ''}`);
     }
-    // Assuming fileCount is available on the folder object for this list
     if (folder.fileCount > 0) {
       parts.push(`${folder.fileCount} file${folder.fileCount !== 1 ? 's' : ''}`);
     }

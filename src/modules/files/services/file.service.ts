@@ -1,7 +1,7 @@
 import { PrismaClient, File, Folder, Prisma } from '@prisma/client';
 import path from 'path';
 import fs from 'fs/promises';
-import { hasAccessToFolderRecursively } from '../../folders/services/folder.service';
+import { getUserPermissionForFolder, hasAccessToFolderRecursively } from '../../folders/services/folder.service';
 
 const prisma = new PrismaClient();
 const UPLOADS_DIR = path.resolve('uploads');
@@ -44,7 +44,7 @@ export const deleteFileRecordAndFromDisk = async (
     where: { id: fileId },
   });
 
-  if (!file || file.ownerId !== userId) {
+  if (!file) {
     throw new Error('File not found or unauthorized');
   }
 
@@ -99,10 +99,7 @@ export const moveFileToFolder = async (
 };
 
 // Find file by ID and check if user has access (owner or via shared folder)
-export const findAccessibleFile = async (
-  fileId: string,
-  userId: string
-): Promise<(File & { folder?: Folder | null }) | null> => {
+export const findAccessibleFile = async (fileId: string, userId: string) => {
   const file = await prisma.file.findUnique({
     where: { id: fileId },
     include: {
@@ -117,12 +114,16 @@ export const findAccessibleFile = async (
 
   if (!file) return null;
 
-  if (file.ownerId === userId) return file;
-
-  if (file.folderId) {
-    const hasAccess = await hasAccessToFolderRecursively(file.folderId, userId);
-    if (hasAccess) return file;
+  if (file.ownerId === userId) {
+    return { file, permission: 'OWNER' as const };
   }
 
-  return null;
+  if (!file.folderId) {
+    return null;
+  }
+
+  const permission = await getUserPermissionForFolder(file.folderId, userId);
+  if (!permission) return null;
+
+  return { file, permission };
 };

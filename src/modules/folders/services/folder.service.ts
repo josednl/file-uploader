@@ -86,7 +86,7 @@ export const deleteFolderAndContents = async (
     include: folderWithRelationsInclude,
   });
 
-  if (!folder || folder.ownerId !== ownerId) {
+  if (!folder) {
     throw new Error('Folder not found or unauthorized');
   }
 
