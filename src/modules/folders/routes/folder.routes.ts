@@ -8,7 +8,7 @@ import {
     editFolderForm, 
     updateFolderHandler, 
     deleteFolderHandler,
-    createPublicShareHandlder,
+    createPublicShareHandler,
     viewSharedFolder,
     handleShareFolder,
     listSharedFolders
@@ -25,7 +25,7 @@ router.get('/:id', viewFolder);
 router.get('/edit/:id', editFolderForm);
 router.post('/edit/:id', updateFolderHandler);
 router.post('/delete/:id', deleteFolderHandler);
-router.post('/share/:id/public', createPublicShareHandlder);
+router.post('/share/:id/public', createPublicShareHandler);
 router.get('/shared/:token', viewSharedFolder);
 router.post('/:id/share', handleShareFolder);
 

@@ -24,7 +24,7 @@
   </form>
 
   <div class="mt-6">
-    <a href="/files/details/<%= file.id %>?from=<%= folder ? ('/folders/' + folder.id) : '/files' %>" class="text-sm text-blue-600 hover:underline">
+    <a href="/files/details/<%= file.id %>?from=<%= file.folder ? ('/folders/' + file.folder.id) : '/files' %>" class="text-sm text-blue-600 hover:underline">
       ← Back to file details
     </a>
   </div>

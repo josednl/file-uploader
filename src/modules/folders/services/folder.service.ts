@@ -1,46 +1,43 @@
-import { Folder, Permission, PrismaClient } from '@prisma/client';
-import { deleteFileRecordAndFromDisk } from '../../files/services/file.service';
+import { Folder, Permission, Prisma, PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import { deleteFileRecordAndFromDisk } from '../../files/services/file.service';
+import { folderFullInclude, folderMinimalInclude, folderWithRelationsInclude } from '../constants/folder.includes';
 
 const prisma = new PrismaClient();
 
+// Obtener carpetas raíz del usuario
 export const getRootFoldersByOwner = async (ownerId: string): Promise<Folder[]> => {
   return prisma.folder.findMany({
-    where: {
-      ownerId,
-      parentId: null,
-    },
-    include: {
-      children: true,
-    },
+    where: { ownerId, parentId: null },
+    include: folderMinimalInclude,
     orderBy: { createdAt: 'desc' },
   });
 };
 
-export async function createFolder(name: string, ownerId: string, parentId?: string | null) {
+// Crear nueva carpeta
+export const createFolder = async (name: string, ownerId: string, parentId?: string | null) => {
   return prisma.folder.create({
-    data: {
-      name,
-      ownerId,
-      parentId: parentId || null,
-    },
+    data: { name, ownerId, parentId: parentId || null },
   });
-}
+};
 
-export async function getAllFoldersForUser(ownerId: string): Promise<Folder[]> {
-  return prisma.folder.findMany({ where: { ownerId } });
-}
+// Obtener todas las carpetas del usuario
+export const getAllFoldersForUser = async (ownerId: string): Promise<Folder[]> => {
+  return prisma.folder.findMany({
+    where: { ownerId },
+    orderBy: { createdAt: 'desc' },
+  });
+};
 
-export async function getFolderByIdWithContents(folderId: string): Promise<Folder | null> {
+// Obtener carpeta con archivos e hijos
+export const getFolderByIdWithContents = async (folderId: string): Promise<Folder | null> => {
   return prisma.folder.findUnique({
     where: { id: folderId },
-    include: {
-      files: true,
-      children: true,
-    },
+    include: folderWithRelationsInclude,
   });
-}
+};
 
+// Obtener breadcrumb (jerarquía de padres)
 export async function getFolderBreadcrumb(folderId: string): Promise<Folder[]> {
   const breadcrumb: Folder[] = [];
 
@@ -55,16 +52,17 @@ export async function getFolderBreadcrumb(folderId: string): Promise<Folder[]> {
   return breadcrumb;
 }
 
+// Actualizar carpeta
 export const updateFolder = async (
   folderId: string,
   ownerId: string,
   data: { name?: string; parentId?: string | null }
 ): Promise<Folder> => {
-  const folder = await prisma.folder.findUnique({
-    where: { id: folderId },
-  });
+  const folder = await prisma.folder.findUnique({ where: { id: folderId } });
 
-  if (!folder || folder.ownerId !== ownerId) throw new Error('Folder not found or unauthorized');
+  if (!folder || folder.ownerId !== ownerId) {
+    throw new Error('Folder not found or unauthorized');
+  }
 
   return prisma.folder.update({
     where: { id: folderId },
@@ -75,102 +73,95 @@ export const updateFolder = async (
   });
 };
 
-
+// Eliminar carpeta y su contenido recursivamente
 export const deleteFolderAndContents = async (
   folderId: string,
-  ownerId: string
+  ownerId: string,
+  trx?: Prisma.TransactionClient
 ): Promise<void> => {
-  const folder = await prisma.folder.findUnique({
+  const client = trx || prisma;
+
+  const folder = await client.folder.findUnique({
     where: { id: folderId },
-    include: {
-      files: true,
-      children: true,
-    },
+    include: folderWithRelationsInclude,
   });
 
   if (!folder || folder.ownerId !== ownerId) {
     throw new Error('Folder not found or unauthorized');
   }
 
-  // Delete files from this folder
-  for (const file of folder.files) {
-    await deleteFileRecordAndFromDisk(file.id, ownerId);
-  }
+  const operation = async (trx: Prisma.TransactionClient) => {
+    for (const file of folder.files) {
+      await deleteFileRecordAndFromDisk(file.id, ownerId, trx);
+    }
 
-  // Recursively delete child folders
-  for (const childFolder of folder.children) {
-    await deleteFolderAndContents(childFolder.id, ownerId);
-  }
+    for (const child of folder.children) {
+      await deleteFolderAndContents(child.id, ownerId, trx);
+    }
 
-  // Delete the folder
-  await prisma.folder.delete({
-    where: { id: folderId },
-  });
+    await trx.folder.delete({ where: { id: folderId } });
+  };
+
+  if (trx) {
+    await operation(trx);
+  } else {
+    await prisma.$transaction(async (trx) => {
+      await operation(trx);
+    });
+  }
 };
 
+// Crear enlace público para carpeta
 export const createPublicShare = async (folderId: string) => {
   const token = crypto.randomBytes(20).toString('hex');
 
   return prisma.publicFolderShare.create({
-    data: {
-      folderId,
-      token,
-    },
+    data: { folderId, token },
   });
-}
+};
 
+// Obtener carpeta compartida públicamente por token
 export const getFolderByPublicToken = async (token: string) => {
   const share = await prisma.publicFolderShare.findUnique({
     where: { token },
-    include: { folder: { include: { files: true, children: true } } },
+    include: {
+      folder: { include: folderWithRelationsInclude },
+    },
   });
 
-  return share ? share.folder : null;
-}
+  return share?.folder || null;
+};
 
+// Compartir carpeta con usuario por email
 export const shareFolderWithUser = async (
   folderId: string,
   userEmail: string,
   permission: Permission
 ) => {
-  const user = await prisma.user.findUnique({
-    where: { email: userEmail },
-  });
+  const user = await prisma.user.findUnique({ where: { email: userEmail } });
 
-  if (!user) {
-    throw new Error('User not found');
-  }
+  if (!user) throw new Error('User not found');
 
-  // Check if already shared
   const existing = await prisma.sharedFolder.findFirst({
-    where: {
-      folderId,
-      userId: user.id,
-    },
+    where: { folderId, userId: user.id },
   });
 
-  if (existing) {
-    throw new Error('Folder already shared with this user');
-  }
+  if (existing) throw new Error('Folder already shared with this user');
 
   return prisma.sharedFolder.create({
-    data: {
-      folderId,
-      userId: user.id,
-      permission,
-    },
+    data: { folderId, userId: user.id, permission },
   });
 };
 
+// Obtener usuarios con acceso compartido a una carpeta
 export const getSharedUsersForFolder = async (folderId: string) => {
   return prisma.sharedFolder.findMany({
     where: { folderId },
-    include: {
-      user: true,
-    },
+    include: { user: true },
   });
 };
 
+// Obtener carpetas compartidas con un usuario
 export const getFoldersSharedWithUser = async (userId: string) => {
   return prisma.sharedFolder.findMany({
     where: { userId },
@@ -184,43 +175,36 @@ export const getFoldersSharedWithUser = async (userId: string) => {
   });
 };
 
+// Comprobación recursiva de acceso a carpeta
 export async function hasAccessToFolderRecursively(folderId: string, userId: string): Promise<boolean> {
-  let currentFolder = await prisma.folder.findUnique({
+  let current = await prisma.folder.findUnique({
     where: { id: folderId },
-    include: {
-      sharedWithUsers: true,
-    },
+    include: { sharedWithUsers: true },
   });
 
-  while (currentFolder) {
-    if (currentFolder.ownerId === userId) return true;
+  while (current) {
+    if (current.ownerId === userId) return true;
 
-    const isShared = currentFolder.sharedWithUsers.some(
-      (shared) => shared.userId === userId
-    );
-    if (isShared) return true;
+    if (current.sharedWithUsers.some((s) => s.userId === userId)) {
+      return true;
+    }
 
-    if (!currentFolder.parentId) break;
+    if (!current.parentId) break;
 
-    currentFolder = await prisma.folder.findUnique({
-      where: { id: currentFolder.parentId },
-      include: {
-        sharedWithUsers: true,
-      },
+    current = await prisma.folder.findUnique({
+      where: { id: current.parentId },
+      include: { sharedWithUsers: true },
     });
   }
 
   return false;
 }
 
+// Buscar carpeta accesible con permisos
 export async function findAccessibleFolder(folderId: string, userId: string): Promise<Folder | null> {
   const folder = await prisma.folder.findUnique({
     where: { id: folderId },
-    include: {
-      files: true,
-      children: true,
-      sharedWithUsers: true,
-    },
+    include: folderFullInclude,
   });
 
   if (!folder) return null;
@@ -229,30 +213,27 @@ export async function findAccessibleFolder(folderId: string, userId: string): Pr
   return hasAccess ? folder : null;
 }
 
+// Obtener permisos de usuario para una carpeta
 export async function getUserPermissionForFolder(
   folderId: string,
   userId: string
 ): Promise<'OWNER' | 'EDIT' | 'READ' | null> {
-  let currentFolder = await prisma.folder.findUnique({
+  let current = await prisma.folder.findUnique({
     where: { id: folderId },
-    include: {
-      sharedWithUsers: true,
-    },
+    include: { sharedWithUsers: true },
   });
 
-  while (currentFolder) {
-    if (currentFolder.ownerId === userId) return 'OWNER';
+  while (current) {
+    if (current.ownerId === userId) return 'OWNER';
 
-    const shared = currentFolder.sharedWithUsers.find(s => s.userId === userId);
+    const shared = current.sharedWithUsers.find((s) => s.userId === userId);
     if (shared) return shared.permission;
 
-    if (!currentFolder.parentId) break;
+    if (!current.parentId) break;
 
-    currentFolder = await prisma.folder.findUnique({
-      where: { id: currentFolder.parentId },
-      include: {
-        sharedWithUsers: true,
-      },
+    current = await prisma.folder.findUnique({
+      where: { id: current.parentId },
+      include: { sharedWithUsers: true },
     });
   }
 

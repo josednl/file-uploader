@@ -1,10 +1,8 @@
 import { Request, Response } from 'express';
-import { User as PrismaUser } from '@prisma/client';
 import path from 'path';
 import {
   findFilesByOwner,
   createFileRecord,
-  findFileByIdAndOwner,
   deleteFileRecordAndFromDisk,
   findFileByIdAndOwnerWithFolder,
   moveFileToFolder,
@@ -12,10 +10,13 @@ import {
   findAccessibleFile
 } from '../services/file.service';
 
-// GET /files - List all files for the authenticated user
+import { getUserId } from '../../../utils/auth';
+
+// 📄 GET /files
 export const listFiles = async (req: Request, res: Response) => {
+  const ownerId = getUserId(req);
+
   try {
-    const ownerId = (req.user as PrismaUser)?.id;
     const files = await findFilesByOwner(ownerId);
     res.render('files/list', { files, folder: null });
   } catch (error) {
@@ -24,23 +25,20 @@ export const listFiles = async (req: Request, res: Response) => {
   }
 };
 
-// POST /files/upload - Handle file upload
+// 📤 POST /files/upload
 export const uploadFile = async (req: Request, res: Response) => {
+  const ownerId = getUserId(req);
+  const folderId = req.body.folderId || null;
+
+  if (!req.file) {
+    req.flash('error', 'No file uploaded');
+    return res.redirect('/files');
+  }
+
   try {
-    if (!req.file) {
-      req.flash('error', 'No file uploaded');
-      return res.redirect('/files');
-    }
-
-    const ownerId = (req.user as PrismaUser)?.id;
-    const folderId = req.body.folderId || null;
-    await createFileRecord(req.file, ownerId!, folderId);
-
+    await createFileRecord(req.file, ownerId, folderId);
     req.flash('success', 'File uploaded successfully');
-    if (folderId) {
-      return res.redirect(`/folders/${folderId}`);
-    }
-    res.redirect('/files');
+    res.redirect(folderId ? `/folders/${folderId}` : '/files');
   } catch (error) {
     console.error('Error uploading file:', error);
     req.flash('error', 'Failed to upload file');
@@ -48,20 +46,20 @@ export const uploadFile = async (req: Request, res: Response) => {
   }
 };
 
-// GET /files/download/:id - Handle file download
+// 📥 GET /files/download/:id
 export const downloadFile = async (req: Request, res: Response) => {
-  try {
-    const fileId = req.params.id;
-    const ownerId = (req.user as PrismaUser)?.id;
+  const fileId = req.params.id;
+  const userId = getUserId(req);
 
-    const file = await findAccessibleFile(fileId, ownerId);
+  try {
+    const file = await findAccessibleFile(fileId, userId);
 
     if (!file) {
       req.flash('error', 'File not found or access denied');
       return res.redirect('/files');
     }
 
-    const absolutePath = path.join(path.join(__dirname, '../../../../uploads'), file.path);
+    const absolutePath = path.resolve('uploads', file.path);
     res.download(absolutePath, file.name);
   } catch (error) {
     console.error('Error downloading file:', error);
@@ -70,12 +68,12 @@ export const downloadFile = async (req: Request, res: Response) => {
   }
 };
 
-
-// POST /files/delete/:id - Handle file deletion
+// 🗑 POST /files/delete/:id
 export const deleteFile = async (req: Request, res: Response) => {
+  const fileId = req.params.id;
+  const ownerId = getUserId(req);
+
   try {
-    const fileId = req.params.id;
-    const ownerId = (req.user as PrismaUser)?.id;
     const file = await findAccessibleFile(fileId, ownerId);
 
     if (!file) {
@@ -85,12 +83,7 @@ export const deleteFile = async (req: Request, res: Response) => {
 
     const folderId = file.folderId;
 
-    const deleted = await deleteFileRecordAndFromDisk(fileId, ownerId);
-
-    if (!deleted) {
-      req.flash('error', 'File not found');
-      return res.redirect(folderId ? `/folders/${folderId}` : '/files');
-    }
+    await deleteFileRecordAndFromDisk(fileId, ownerId);
 
     req.flash('success', 'File deleted successfully');
     res.redirect(folderId ? `/folders/${folderId}` : '/files');
@@ -101,14 +94,15 @@ export const deleteFile = async (req: Request, res: Response) => {
   }
 };
 
-// GET /files/:id - File details
+// 🔍 GET /files/:id
 export const getFileDetails = async (req: Request, res: Response) => {
-  try {
-    const fileId = req.params.id;
-    const ownerId = (req.user as PrismaUser)?.id;
-    const from = req.query.from?.toString();
+  const fileId = req.params.id;
+  const ownerId = getUserId(req);
+  const from = req.query.from?.toString();
 
+  try {
     const file = await findAccessibleFile(fileId, ownerId);
+
     if (!file) {
       req.flash('error', 'File not found or access denied');
       return res.redirect('/files');
@@ -122,20 +116,20 @@ export const getFileDetails = async (req: Request, res: Response) => {
   }
 };
 
-// GET /files/move/:id - Show move form
+// 📦 GET /files/move/:id
 export const showMoveFileForm = async (req: Request, res: Response) => {
-  try {
-    const fileId = req.params.id;
-    const ownerId = (req.user as PrismaUser)?.id;
+  const fileId = req.params.id;
+  const ownerId = getUserId(req);
 
+  try {
     const file = await findFileByIdAndOwnerWithFolder(fileId, ownerId);
+
     if (!file) {
       req.flash('error', 'File not found');
       return res.redirect('/files');
     }
 
     const folders = await findFoldersByOwner(ownerId);
-
     res.render('files/move', { file, folders });
   } catch (error) {
     console.error('Error rendering move file form:', error);
@@ -144,15 +138,14 @@ export const showMoveFileForm = async (req: Request, res: Response) => {
   }
 };
 
-// POST /files/move/:id - Handle move
+// 📦 POST /files/move/:id
 export const handleMoveFile = async (req: Request, res: Response) => {
+  const fileId = req.params.id;
+  const ownerId = getUserId(req);
+  const { folderId } = req.body;
+
   try {
-    const fileId = req.params.id;
-    const ownerId = (req.user as PrismaUser)?.id;
-    const { folderId } = req.body;
-
     await moveFileToFolder(fileId, ownerId, folderId === 'none' ? null : folderId);
-
     req.flash('success', 'File moved successfully');
     res.redirect(folderId && folderId !== 'none' ? `/folders/${folderId}` : '/files');
   } catch (error) {

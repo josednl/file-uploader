@@ -1,12 +1,12 @@
-import { PrismaClient, File, Folder } from '@prisma/client';
+import { PrismaClient, File, Folder, Prisma } from '@prisma/client';
 import path from 'path';
 import fs from 'fs/promises';
 import { hasAccessToFolderRecursively } from '../../folders/services/folder.service';
 
 const prisma = new PrismaClient();
+const UPLOADS_DIR = path.resolve('uploads');
 
-const UPLOADS_DIR = path.join(__dirname, '../../../../uploads');
-
+// 📄 Obtener archivos del usuario
 export const findFilesByOwner = async (ownerId: string): Promise<File[]> => {
   return prisma.file.findMany({
     where: { ownerId },
@@ -14,6 +14,7 @@ export const findFilesByOwner = async (ownerId: string): Promise<File[]> => {
   });
 };
 
+// 📤 Crear registro de archivo subido
 export const createFileRecord = async (
   fileData: Express.Multer.File,
   ownerId: string,
@@ -31,69 +32,53 @@ export const createFileRecord = async (
   });
 };
 
-export const findFileByIdAndOwner = async (
-  fileId: string,
-  ownerId: string
-): Promise<(File & { absolutePath: string }) | null> => {
-  const file = await prisma.file.findFirst({
-    where: { id: fileId, ownerId },
-  });
-
-  if (!file) {
-    return null;
-  }
-
-  const absolutePath = path.join(UPLOADS_DIR, file.path);
-
-  try {
-    await fs.access(absolutePath);
-    return { ...file, absolutePath };
-  } catch {
-    console.warn(`File record found in DB but not on filesystem: ${absolutePath}`);
-    return null;
-  }
-};
-
+// 🗑 Eliminar archivo (registro + disco)
 export const deleteFileRecordAndFromDisk = async (
   fileId: string,
-  ownerId: string
-): Promise<boolean> => {
-  const file = await prisma.file.findFirst({
-    where: { id: fileId, ownerId },
+  userId: string,
+  trx?: Prisma.TransactionClient
+): Promise<void> => {
+  const client = trx || prisma;
+
+  const file = await client.file.findUnique({
+    where: { id: fileId },
   });
 
-  if (!file) {
-    return false;
+  if (!file || file.ownerId !== userId) {
+    throw new Error('File not found or unauthorized');
   }
 
-  // Transaction to ensure both DB record and file are deleted, or neither.
   const filePath = path.join(UPLOADS_DIR, file.path);
 
-  try {
-    // Delete file from filesystem first
-    await fs.unlink(filePath);
-    // Then delete from DB
-    await prisma.file.delete({
+  const deleteOperation = async (tx: Prisma.TransactionClient) => {
+    await fs.unlink(filePath).catch((err) => {
+      console.warn(`Failed to delete file from disk: ${filePath}`, err.message);
+    });
+
+    await tx.file.delete({
       where: { id: fileId },
     });
-    return true;
-  } catch (error) {
-    console.error(`Failed to delete file ${fileId} or its record. Path: ${filePath}`, error);
-    // Re-throw the error to be caught by the controller
-    throw new Error('Error during file deletion process.');
+  };
+
+  if (trx) {
+    await deleteOperation(client);
+  } else {
+    await prisma.$transaction(deleteOperation);
   }
 };
 
+// 🔍 Buscar archivo por ID con su carpeta (solo si es del dueño)
 export const findFileByIdAndOwnerWithFolder = async (
   fileId: string,
   ownerId: string
 ): Promise<(File & { folder: { id: string; name: string } | null }) | null> => {
   return prisma.file.findFirst({
     where: { id: fileId, ownerId },
-    include: { folder: true },
+    include: { folder: { select: { id: true, name: true } } },
   });
 };
 
+// 📁 Obtener carpetas para mover archivos
 export const findFoldersByOwner = async (ownerId: string) => {
   return prisma.folder.findMany({
     where: { ownerId },
@@ -101,34 +86,30 @@ export const findFoldersByOwner = async (ownerId: string) => {
   });
 };
 
+// 🔁 Mover archivo a otra carpeta
 export const moveFileToFolder = async (
   fileId: string,
   ownerId: string,
   folderId: string | null
 ): Promise<File> => {
   return prisma.file.update({
-    where: {
-      id: fileId,
-      ownerId,
-    },
-    data: {
-      folderId,
-    },
+    where: { id: fileId, ownerId },
+    data: { folderId },
   });
 };
 
-export async function findAccessibleFile(
+// 🔒 Buscar archivo con acceso válido para el usuario
+export const findAccessibleFile = async (
   fileId: string,
-  userId: string,
-  publicToken?: string
-): Promise<(File & { folder?: Folder | null }) | null> {
+  userId: string
+): Promise<(File & { folder?: Folder | null }) | null> => {
   const file = await prisma.file.findUnique({
     where: { id: fileId },
     include: {
       folder: {
         include: {
-          publicShare: true,
           sharedWithUsers: true,
+          publicShare: true,
         },
       },
     },
@@ -136,18 +117,12 @@ export async function findAccessibleFile(
 
   if (!file) return null;
 
-  const folder = file.folder;
-
-   if (!file) return null;
-
   if (file.ownerId === userId) return file;
 
   if (file.folderId) {
     const hasAccess = await hasAccessToFolderRecursively(file.folderId, userId);
-    return hasAccess ? file : null;
+    if (hasAccess) return file;
   }
 
   return null;
-}
-
-
+};

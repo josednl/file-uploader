@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { User as PrismaUser } from '@prisma/client';
 import {
   getRootFoldersByOwner,
   createFolder,
@@ -14,12 +13,14 @@ import {
   getSharedUsersForFolder,
   getFoldersSharedWithUser,
   findAccessibleFolder,
-  getUserPermissionForFolder
+  getUserPermissionForFolder,
 } from '../services/folder.service';
 
-export const listRootFolders = async (req: Request, res: Response) => {
-  const ownerId = (req.user as PrismaUser).id;
+import { getUserId } from '../../../utils/auth';
 
+// Listar carpetas raíz del usuario
+export const listRootFolders = async (req: Request, res: Response) => {
+  const ownerId = getUserId(req);
   try {
     const folders = await getRootFoldersByOwner(ownerId);
     res.render('folders/index', { folders });
@@ -30,19 +31,20 @@ export const listRootFolders = async (req: Request, res: Response) => {
   }
 };
 
-export async function createFolderForm(req: Request, res: Response) {
-  const ownerId = (req.user as PrismaUser).id;
+// Mostrar formulario para crear carpeta
+export const createFolderForm = async (req: Request, res: Response) => {
+  const ownerId = getUserId(req);
   const folders = await getAllFoldersForUser(ownerId);
   res.render('folders/create', { folders });
-}
+};
 
+// Manejar creación de carpeta
 export const createFolderHandler = async (req: Request, res: Response) => {
-  const ownerId = (req.user as PrismaUser).id;
+  const ownerId = getUserId(req);
   const { name, parentId } = req.body;
 
   try {
-    await createFolder(name, ownerId, parentId);
-
+    await createFolder(name, ownerId, parentId || null);
     req.flash('success', 'Folder created successfully');
     res.redirect(parentId ? `/folders/${parentId}` : '/dashboard');
   } catch (err) {
@@ -52,9 +54,10 @@ export const createFolderHandler = async (req: Request, res: Response) => {
   }
 };
 
+// Ver carpeta y su contenido
 export const viewFolder = async (req: Request, res: Response) => {
   const folderId = req.params.id;
-  const ownerId = (req.user as PrismaUser).id;
+  const ownerId = getUserId(req);
 
   const folder = await findAccessibleFolder(folderId, ownerId);
   const permission = await getUserPermissionForFolder(folderId, ownerId);
@@ -68,16 +71,16 @@ export const viewFolder = async (req: Request, res: Response) => {
     req.flash('error', 'Folder not found');
     return res.redirect('/dashboard');
   }
+
   const breadcrumb = await getFolderBreadcrumb(folderId);
   const sharedUsers = await getSharedUsersForFolder(folderId);
 
   res.render('folders/show', { folder, breadcrumb, sharedUsers, permission });
 };
 
-
-// GET /folders/edit/:id
+// Mostrar formulario para editar carpeta
 export const editFolderForm = async (req: Request, res: Response) => {
-  const ownerId = (req.user as PrismaUser).id;
+  const ownerId = getUserId(req);
   const folderId = req.params.id;
 
   const folder = await getFolderByIdWithContents(folderId);
@@ -88,25 +91,28 @@ export const editFolderForm = async (req: Request, res: Response) => {
     return res.redirect('/dashboard');
   }
 
-  res.render('folders/edit', { folder, folders }); // View para editar carpeta
+  res.render('folders/edit', { folder, folders });
 };
 
-// POST /folders/edit/:id
+// Manejar actualización de carpeta
 export const updateFolderHandler = async (req: Request, res: Response) => {
-  const ownerId = (req.user as PrismaUser).id;
+  const ownerId = getUserId(req);
   const folderId = req.params.id;
+
   const permission = await getUserPermissionForFolder(folderId, ownerId);
 
   if (permission !== 'OWNER') {
     req.flash('error', 'Only the owner can perform this action.');
     return res.redirect(`/folders/${folderId}`);
   }
+
   const { name, parentId } = req.body;
   const normalizedParentId = parentId && parentId !== '' ? parentId : null;
+
   try {
     await updateFolder(folderId, ownerId, { name, parentId: normalizedParentId });
     req.flash('success', 'Folder updated successfully');
-    res.redirect(parentId ? `/folders/${parentId}` : '/dashboard');
+    res.redirect(normalizedParentId ? `/folders/${normalizedParentId}` : '/dashboard');
   } catch (err) {
     console.error(err);
     req.flash('error', 'Failed to update folder');
@@ -114,17 +120,17 @@ export const updateFolderHandler = async (req: Request, res: Response) => {
   }
 };
 
-// POST /folders/delete/:id
+// Manejar eliminación de carpeta
 export const deleteFolderHandler = async (req: Request, res: Response) => {
-  const ownerId = (req.user as PrismaUser).id;
+  const ownerId = getUserId(req);
   const folderId = req.params.id;
-  const permission = await getUserPermissionForFolder(folderId, ownerId);
 
+  const permission = await getUserPermissionForFolder(folderId, ownerId);
   if (permission !== 'OWNER') {
     req.flash('error', 'Only the owner can perform this action.');
     return res.redirect(`/folders/${folderId}`);
   }
-  
+
   try {
     const folder = await getFolderByIdWithContents(folderId);
     const parentId = folder?.parentId;
@@ -139,7 +145,8 @@ export const deleteFolderHandler = async (req: Request, res: Response) => {
   }
 };
 
-export const createPublicShareHandlder = async (req: Request, res: Response) => {
+// Crear enlace público para carpeta
+export const createPublicShareHandler = async (req: Request, res: Response) => {
   const folderId = req.params.id;
 
   try {
@@ -153,6 +160,7 @@ export const createPublicShareHandlder = async (req: Request, res: Response) => 
   }
 };
 
+// Ver carpeta compartida públicamente
 export const viewSharedFolder = async (req: Request, res: Response) => {
   const token = req.params.token;
 
@@ -161,9 +169,10 @@ export const viewSharedFolder = async (req: Request, res: Response) => {
     return res.status(404).render('404', { message: 'Shared folder not found' });
   }
 
-  res.render('folders/shared', { folder });
+  res.render('folders/shared_public', { folder });
 };
 
+// Compartir carpeta con usuario
 export const handleShareFolder = async (req: Request, res: Response) => {
   const folderId = req.params.id;
   const { email, permission } = req.body;
@@ -178,8 +187,10 @@ export const handleShareFolder = async (req: Request, res: Response) => {
   res.redirect(`/folders/${folderId}`);
 };
 
+// Listar carpetas compartidas con el usuario
 export const listSharedFolders = async (req: Request, res: Response) => {
-  const userId = (req.user as PrismaUser).id;
+  const userId = getUserId(req);
+
   try {
     const sharedFolders = await getFoldersSharedWithUser(userId);
     res.render('folders/shared', { sharedFolders });
