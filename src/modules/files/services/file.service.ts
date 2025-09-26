@@ -1,10 +1,27 @@
-import { PrismaClient, File, Folder, Prisma } from '@prisma/client';
+import { PrismaClient, File, Prisma } from '@prisma/client';
 import path from 'path';
 import fs from 'fs/promises';
-import { getUserPermissionForFolder, hasAccessToFolderRecursively } from '../../folders/services/folder.service';
+import { getUserPermissionForFolder } from '../../folders/services/folder.service';
 
 const prisma = new PrismaClient();
 const UPLOADS_DIR = path.resolve('uploads');
+
+// Get file by ID
+export async function getFileById(fileId: string) {
+  return await prisma.file.findUnique({
+    where: { id: fileId },
+  });
+}
+
+// Get file by ID with folder info
+export const getFileByIdWithFolder = async (fileId: string) => {
+  return prisma.file.findUnique({
+    where: { id: fileId },
+    include: {
+      folder: true,
+    },
+  });
+};
 
 // Get user's files
 export const findFilesByOwner = async (ownerId: string): Promise<File[]> => {
@@ -75,14 +92,6 @@ export const findFileByIdAndOwnerWithFolder = async (
   return prisma.file.findFirst({
     where: { id: fileId, ownerId },
     include: { folder: { select: { id: true, name: true } } },
-  });
-};
-
-// Get folders owned by user
-export const findFoldersByOwner = async (ownerId: string) => {
-  return prisma.folder.findMany({
-    where: { ownerId },
-    orderBy: { name: 'asc' },
   });
 };
 

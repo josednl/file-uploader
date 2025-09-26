@@ -288,7 +288,7 @@
           Public link is Active:
         </p>
         <div class="flex items-center gap-3">
-          <input type="text" value="/shared/<%= folder.publicShare.token %>" readonly class="flex-grow border border-gray-300 bg-white rounded-lg px-4 py-2 text-sm truncate" onclick="this.select(); document.execCommand('copy'); alert('Link copied!');" title="Click to copy link" />
+          <input type="text" value="/shared/public/<%= folder.publicShare.token %>" readonly class="flex-grow border border-gray-300 bg-white rounded-lg px-4 py-2 text-sm truncate" onclick="this.select(); document.execCommand('copy'); alert('Link copied!');" title="Click to copy link" />
           <form action="/folders/unshare/<%= folder.id %>/public" method="POST" onsubmit="return confirm('Are you sure you want to disable the public link?');">
             <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold text-sm transition shadow-md">
               Disable Link

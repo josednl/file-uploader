@@ -1,9 +1,17 @@
-import { Folder, Permission, Prisma, PrismaClient } from '@prisma/client';
+import { Folder, Permission, Prisma, PrismaClient, PublicFolderShare } from '@prisma/client';
 import crypto from 'crypto';
 import { deleteFileRecordAndFromDisk } from '../../files/services/file.service';
 import { folderFullInclude, folderMinimalInclude, folderWithRelationsInclude } from '../constants/folder.includes';
 
 const prisma = new PrismaClient();
+
+// Get folders owned by user
+export const findFoldersByOwner = async (ownerId: string) => {
+  return prisma.folder.findMany({
+    where: { ownerId },
+    orderBy: { name: 'asc' },
+  });
+};
 
 // Get root folders for a user
 export const getRootFoldersByOwner = async (ownerId: string): Promise<Folder[]> => {
@@ -122,22 +130,36 @@ export const deleteFolderAndContents = async (
 export const createPublicShare = async (folderId: string) => {
   const token = crypto.randomBytes(20).toString('hex');
 
-  return prisma.publicFolderShare.create({
-    data: { folderId, token },
+  return prisma.publicFolderShare.upsert({
+    where: { folderId },
+    update: { token },
+    create: { folderId, token },
   });
 };
 
 // Get folder by public share token
-export const getFolderByPublicToken = async (token: string) => {
-  const share = await prisma.publicFolderShare.findUnique({
+export async function getFolderByPublicToken(token: string) {
+  return prisma.publicFolderShare.findUnique({
     where: { token },
     include: {
-      folder: { include: folderWithRelationsInclude },
+      folder: {
+        include: {
+          files: true,
+          children: {
+            include: {
+              _count: {
+                select: {
+                  files: true,
+                  children: true
+                }
+              }
+            }
+          },
+        },
+      },
     },
   });
-
-  return share?.folder || null;
-};
+}
 
 // Share folder with a user
 export const shareFolderWithUser = async (
@@ -266,4 +288,23 @@ export async function removeSharedUser(folderId: string, targetUserId: string) {
       userId: targetUserId,
     },
   });
+}
+
+export async function isFolderDescendant(folderId: string, rootFolderId: string): Promise<boolean> {
+  let current = await prisma.folder.findUnique({
+    where: { id: folderId },
+    select: { id: true, parentId: true },
+  });
+
+  while (current) {
+    if (current.id === rootFolderId) return true;
+    if (!current.parentId) break;
+
+    current = await prisma.folder.findUnique({
+      where: { id: current.parentId },
+      select: { id: true, parentId: true },
+    });
+  }
+
+  return false;
 }

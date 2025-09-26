@@ -6,13 +6,12 @@ import {
   deleteFileRecordAndFromDisk,
   findFileByIdAndOwnerWithFolder,
   moveFileToFolder,
-  findFoldersByOwner,
-  findAccessibleFile
+  findAccessibleFile,
+  getFileById,
+  getFileByIdWithFolder
 } from '../services/file.service';
-
 import { getUserId } from '../../../utils/auth';
-import { permission } from 'process';
-import { Permission } from '@prisma/client';
+import { getAllFoldersForUser, getFolderByPublicToken, isFolderDescendant } from '../../folders/services/folder.service';
 
 // GET /files
 export const listFiles = async (req: Request, res: Response) => {
@@ -132,7 +131,7 @@ export const showMoveFileForm = async (req: Request, res: Response) => {
       return res.redirect('/files');
     }
 
-    const folders = await findFoldersByOwner(ownerId);
+    const folders = await getAllFoldersForUser(ownerId);
     res.render('files/move', { file, folders });
   } catch (error) {
     console.error('Error rendering move file form:', error);
@@ -155,5 +154,77 @@ export const handleMoveFile = async (req: Request, res: Response) => {
     console.error('Error moving file:', error);
     req.flash('error', 'Failed to move file');
     res.redirect('/files');
+  }
+};
+
+export const downloadPublicFile = async (req: Request, res: Response) => {
+  const { token, fileId } = req.params;
+
+  try {
+    const publicShare = await getFolderByPublicToken(token);
+
+    if (!publicShare) {
+      req.flash('error', 'Invalid or expired public link');
+      return res.redirect('/');
+    }
+
+    const file = await getFileByIdWithFolder(fileId);
+
+    if (!file) {
+      req.flash('error', 'File not found');
+      return res.redirect(`/shared/${token}`);
+    }
+
+    const isAccessible = await isFolderDescendant(file.folderId!, publicShare.folderId);
+
+    if (!isAccessible) {
+      req.flash('error', 'Access denied to this file');
+      return res.redirect(`/shared/${token}`);
+    }
+
+    const absolutePath = path.resolve('uploads', file.path);
+    res.download(absolutePath, file.name);
+  } catch (error) {
+    console.error('Error downloading public file:', error);
+    req.flash('error', 'Unable to download file');
+    res.redirect(`/shared/${token}`);
+  }
+};
+
+export const viewSharedFile = async (req: Request, res: Response) => {
+  const token = req.params.token;
+  const fileId = req.params.fileId;
+
+  try {
+    const publicShare = await getFolderByPublicToken(token);
+    if (!publicShare) {
+      req.flash('error', 'Invalid or expired public link');
+      return res.redirect('/');
+    }
+
+    const rootFolder = publicShare.folder;
+
+    const file = await getFileById(fileId);
+    if (!file) {
+      req.flash('error', 'File not found');
+      return res.redirect(`/shared/public/${token}`);
+    }
+
+    if (file.folderId && file.folderId !== rootFolder.id) {
+      const isAccessible = await isFolderDescendant(file.folderId, rootFolder.id);
+      if (!isAccessible) {
+        req.flash('error', 'Access denied to this file');
+        return res.redirect(`/shared/public/${token}`);
+      }
+    }
+    res.render('files/public-show', {
+      file,
+      permission: 'READ',
+      sharedToken: token
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Unable to load shared file');
+    res.redirect('/');
   }
 };

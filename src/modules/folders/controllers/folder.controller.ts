@@ -17,8 +17,8 @@ import {
   updateFolderPermission,
   getFolderById,
   removeSharedUser,
+  isFolderDescendant,
 } from '../services/folder.service';
-
 import { getUserId } from '../../../utils/auth';
 
 // GET /folders
@@ -187,13 +187,54 @@ export const createPublicShareHandler = async (req: Request, res: Response) => {
 export const viewSharedFolder = async (req: Request, res: Response) => {
   const token = req.params.token;
 
-  const folder = await getFolderByPublicToken(token);
-  if (!folder) {
-    return res.status(404).render('404', { message: 'Shared folder not found' });
-  }
+  try {
+    const publicShare = await getFolderByPublicToken(token);
 
-  res.render('folders/shared_public', { folder });
+    if (!publicShare) {
+      req.flash('error', 'Invalid or expired public link');
+      return res.redirect('/');
+    }
+
+    const folderId = req.params.folderId || publicShare.folder.id;
+    const rootFolder = publicShare.folder;
+
+    const targetFolder = await safeGetFolderWithContents(folderId, token, req, res);
+    if (!targetFolder) return;
+
+    if (folderId && folderId !== rootFolder.id) {
+      const isAccessible = await isFolderDescendant(folderId, rootFolder.id);
+
+      if (!isAccessible) {
+        req.flash('error', 'Access denied to this folder');
+        return res.redirect(`/shared/public/${token}`);
+      }
+    }
+
+    const breadcrumb = await getFolderBreadcrumb(targetFolder.id);
+
+    res.render('folders/public-show', {
+      folder: targetFolder,
+      breadcrumb,
+      permission: 'READ',
+      sharedToken: token
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Unable to load shared folder');
+    res.redirect('/');
+  }
 };
+
+async function safeGetFolderWithContents(folderId: string, token: string, req: Request, res: Response) {
+  const folder = await getFolderByIdWithContents(folderId);
+  if (!folder) {
+    req.flash('error', 'Folder not found');
+    res.redirect(`/shared/public/${token}`);
+    return null;
+  }
+  return folder;
+}
+
 
 // POST /folders/:id/share
 export const handleShareFolder = async (req: Request, res: Response) => {
