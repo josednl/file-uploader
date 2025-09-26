@@ -1,0 +1,70 @@
+<%
+  const returnUrl = '/demo'; // Puedes cambiar esto si tienes un botón de regreso específico
+
+  const getExtension = (filename) => {
+    return filename.split('.').pop().toLowerCase();
+  };
+
+  const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(getExtension(file.name));
+%>
+
+<%- include('../partials/header', { title: 'File Demo' }) %>
+
+<main class="max-w-4xl mx-auto px-6 py-12">
+
+  <div class="mb-8">
+    <a href="javascript:history.back()" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1.5 transition">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Go Back
+    </a>
+  </div>
+
+  <div class="bg-white p-8 lg:p-10 rounded-xl shadow-xl border border-gray-100">
+    <header class="mb-8 border-b pb-4">
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-1">
+        <%= file.name %>
+      </h1>
+      <p class="text-gray-500 text-sm">Demo Preview</p>
+    </header>
+
+    <% if (isImage) { %>
+    <section class="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200 text-center">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Image Preview</h2>
+      <img src="/guest/folder/<%= folderId %>/file/<%= encodeURIComponent(file.name) %>/download" alt="Preview of <%= file.name %>" class="max-w-full h-auto max-h-96 mx-auto rounded-lg shadow-lg object-contain border border-gray-300">
+    </section>
+    <% } else { %>
+    <section class="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200 text-center">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">File Preview</h2>
+      <p class="text-gray-600 italic">This file cannot be previewed.</p>
+    </section>
+    <% } %>
+
+    <section>
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">Details</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg border border-gray-200">
+
+        <div>
+          <strong class="text-xs font-semibold uppercase text-gray-500">File Name</strong>
+          <p class="text-gray-800 font-medium break-all"><%= file.name %></p>
+        </div>
+
+        <div>
+          <strong class="text-xs font-semibold uppercase text-gray-500">Path</strong>
+          <p class="text-gray-600 text-sm">
+            <span class="font-mono text-sm text-gray-800"><%= file.folder %>/<%= file.name %></span>
+          </p>
+        </div>
+
+        <div>
+          <strong class="text-xs font-semibold uppercase text-gray-500">Access</strong>
+          <p class="text-gray-800 font-medium"><%= guest ? 'Guest Demo' : 'Authenticated User' %></p>
+        </div>
+
+      </div>
+    </section>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

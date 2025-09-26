@@ -1,0 +1,69 @@
+<%- include('../partials/header', { title: 'Guest Dashboard' }) %>
+
+<main class="max-w-7xl mx-auto px-6 py-12">
+
+  <section class="mb-12 text-center border-b pb-6">
+    <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">Welcome to the Demo, <%= demoUser.name.split(' ')[0] %>! 👋</h1>
+    <p class="text-lg text-gray-600">Explore the app as a guest. No signup needed.</p>
+  </section>
+
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-md p-6 group block opacity-50 cursor-not-allowed">
+      <div class="flex items-center justify-center w-12 h-12 mb-4 rounded-full bg-blue-50 text-blue-600 transition">
+        📁
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 transition mb-1">Sample Files</h3>
+      <p class="text-sm text-gray-500">Browsing files is disabled in guest mode.</p>
+      <span class="inline-flex items-center text-sm font-medium text-gray-400 mt-4">
+        Guest Access Only
+      </span>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-md p-6 group block opacity-50 cursor-not-allowed">
+      <div class="flex items-center justify-center w-12 h-12 mb-4 rounded-full bg-green-50 text-green-600 transition">
+        🔒
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 transition mb-1">Shared with Me</h3>
+      <p class="text-sm text-gray-500">This feature is disabled in guest mode.</p>
+      <span class="inline-flex items-center text-sm font-medium text-gray-400 mt-4">
+        Guest Access Only
+      </span>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-md p-6 group block opacity-50 cursor-not-allowed">
+      <div class="flex items-center justify-center w-12 h-12 mb-4 rounded-full bg-yellow-50 text-yellow-600 transition">
+        ⬆️
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 transition mb-1">Upload Files</h3>
+      <p class="text-sm text-gray-500">Uploading is disabled for demo users.</p>
+      <span class="inline-flex items-center text-sm font-medium text-gray-400 mt-4">
+        Not Available
+      </span>
+    </div>
+  </section>
+
+  <section>
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Sample Folders</h2>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <% demoFolders.forEach(folder => { %>
+      <a href="/guest/folder/<%= folder.id %>" class="group block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg p-4 transition">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 flex items-center justify-center text-yellow-500 group-hover:text-yellow-600 transition flex-shrink-0">
+            📁
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-800 group-hover:text-blue-600 truncate transition"><%= folder.name %></h3>
+            <p class="text-xs text-gray-500 mt-0.5">Created <%= folder.createdAt.toLocaleDateString() %></p>
+          </div>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>

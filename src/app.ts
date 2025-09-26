@@ -9,6 +9,7 @@ import dashboardRoutes from './modules/dashboard/routes/dashboard.routes';
 import filesRouter from './modules/files/routes/file.routes';
 import foldersRouter from './modules/folders/routes/folder.routes';
 import sharedRouter from './modules/folders/routes/shared.routes';
+import guestRouter from './modules/guest/routes/guest.routes';
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.use('/', authRoutes);
+app.use('/guest', guestRouter);
 app.use('/shared/public', sharedRouter);
 app.use('/dashboard', dashboardRoutes);
 app.use('/files', filesRouter);
