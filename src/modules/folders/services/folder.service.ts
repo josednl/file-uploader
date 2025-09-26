@@ -1,7 +1,11 @@
 import { Folder, Permission, Prisma, PrismaClient, PublicFolderShare } from '@prisma/client';
 import crypto from 'crypto';
 import { deleteFileRecordAndFromDisk } from '../../files/services/file.service';
-import { folderFullInclude, folderMinimalInclude, folderWithRelationsInclude } from '../constants/folder.includes';
+import {
+  folderFullInclude,
+  folderMinimalInclude,
+  folderWithRelationsInclude,
+} from '../constants/folder.includes';
 
 const prisma = new PrismaClient();
 
@@ -120,7 +124,7 @@ export const deleteFolderAndContents = async (
   if (trx) {
     await operation(trx);
   } else {
-    await prisma.$transaction(async (trx) => {
+    await prisma.$transaction(async trx => {
       await operation(trx);
     });
   }
@@ -150,10 +154,10 @@ export async function getFolderByPublicToken(token: string) {
               _count: {
                 select: {
                   files: true,
-                  children: true
-                }
-              }
-            }
+                  children: true,
+                },
+              },
+            },
           },
         },
       },
@@ -205,7 +209,10 @@ export const getFoldersSharedWithUser = async (userId: string) => {
 };
 
 // Check if user has access to folder (directly or via parent)
-export async function hasAccessToFolderRecursively(folderId: string, userId: string): Promise<boolean> {
+export async function hasAccessToFolderRecursively(
+  folderId: string,
+  userId: string
+): Promise<boolean> {
   let current = await prisma.folder.findUnique({
     where: { id: folderId },
     include: { sharedWithUsers: true },
@@ -214,7 +221,7 @@ export async function hasAccessToFolderRecursively(folderId: string, userId: str
   while (current) {
     if (current.ownerId === userId) return true;
 
-    if (current.sharedWithUsers.some((s) => s.userId === userId)) {
+    if (current.sharedWithUsers.some(s => s.userId === userId)) {
       return true;
     }
 
@@ -230,7 +237,10 @@ export async function hasAccessToFolderRecursively(folderId: string, userId: str
 }
 
 // Find folder if user has access
-export async function findAccessibleFolder(folderId: string, userId: string): Promise<Folder | null> {
+export async function findAccessibleFolder(
+  folderId: string,
+  userId: string
+): Promise<Folder | null> {
   const folder = await prisma.folder.findUnique({
     where: { id: folderId },
     include: folderFullInclude,
@@ -255,7 +265,7 @@ export async function getUserPermissionForFolder(
   while (current) {
     if (current.ownerId === userId) return 'OWNER';
 
-    const shared = current.sharedWithUsers.find((s) => s.userId === userId);
+    const shared = current.sharedWithUsers.find(s => s.userId === userId);
     if (shared) return shared.permission;
 
     if (!current.parentId) break;
@@ -269,7 +279,11 @@ export async function getUserPermissionForFolder(
   return null;
 }
 
-export async function updateFolderPermission(folderId: string, targetUserId: string, newPermission: 'READ' | 'EDIT') {
+export async function updateFolderPermission(
+  folderId: string,
+  targetUserId: string,
+  newPermission: 'READ' | 'EDIT'
+) {
   return prisma.sharedFolder.updateMany({
     where: {
       folderId,

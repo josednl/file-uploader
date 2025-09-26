@@ -218,7 +218,7 @@ export const viewSharedFolder = async (req: Request, res: Response) => {
       folder: targetFolder,
       breadcrumb,
       permission: 'READ',
-      sharedToken: token
+      sharedToken: token,
     });
   } catch (err) {
     console.error(err);
@@ -227,7 +227,12 @@ export const viewSharedFolder = async (req: Request, res: Response) => {
   }
 };
 
-async function safeGetFolderWithContents(folderId: string, token: string, req: Request, res: Response) {
+async function safeGetFolderWithContents(
+  folderId: string,
+  token: string,
+  req: Request,
+  res: Response
+) {
   const folder = await getFolderByIdWithContents(folderId);
   if (!folder) {
     req.flash('error', 'Folder not found');
@@ -236,7 +241,6 @@ async function safeGetFolderWithContents(folderId: string, token: string, req: R
   }
   return folder;
 }
-
 
 // POST /folders/:id/share
 export const handleShareFolder = async (req: Request, res: Response) => {

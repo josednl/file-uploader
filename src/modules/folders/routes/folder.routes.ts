@@ -1,19 +1,19 @@
 import { Router } from 'express';
 import { requireAuth } from '../../shared/middlewares/auth.middleware';
-import { 
-    listRootFolders, 
-    createFolderForm, 
-    createFolderHandler, 
-    viewFolder, 
-    editFolderForm, 
-    updateFolderHandler, 
-    deleteFolderHandler,
-    createPublicShareHandler,
-    handleShareFolder,
-    listSharedFolders,
-    updateSharedPermissionHandler,
-    removeSharedUserHandler,
-    unshareFolderPublicHandler
+import {
+  listRootFolders,
+  createFolderForm,
+  createFolderHandler,
+  viewFolder,
+  editFolderForm,
+  updateFolderHandler,
+  deleteFolderHandler,
+  createPublicShareHandler,
+  handleShareFolder,
+  listSharedFolders,
+  updateSharedPermissionHandler,
+  removeSharedUserHandler,
+  unshareFolderPublicHandler,
 } from '../controllers/folder.controller';
 
 const router = Router();

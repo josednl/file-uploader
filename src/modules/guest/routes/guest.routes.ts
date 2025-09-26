@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { guestHome, viewDemoFolder, viewDemoFile, downloadDemoFile } from '../controllers/guest.controller';
+import {
+  guestHome,
+  viewDemoFolder,
+  viewDemoFile,
+  downloadDemoFile,
+} from '../controllers/guest.controller';
 
 const router = Router();
 

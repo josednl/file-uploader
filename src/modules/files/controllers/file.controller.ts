@@ -8,10 +8,14 @@ import {
   moveFileToFolder,
   findAccessibleFile,
   getFileById,
-  getFileByIdWithFolder
+  getFileByIdWithFolder,
 } from '../services/file.service';
 import { getUserId } from '../../../utils/auth';
-import { getAllFoldersForUser, getFolderByPublicToken, isFolderDescendant } from '../../folders/services/folder.service';
+import {
+  getAllFoldersForUser,
+  getFolderByPublicToken,
+  isFolderDescendant,
+} from '../../folders/services/folder.service';
 
 // GET /files
 export const listFiles = async (req: Request, res: Response) => {
@@ -220,7 +224,7 @@ export const viewSharedFile = async (req: Request, res: Response) => {
     res.render('files/public-show', {
       file,
       permission: 'READ',
-      sharedToken: token
+      sharedToken: token,
     });
   } catch (err) {
     console.error(err);

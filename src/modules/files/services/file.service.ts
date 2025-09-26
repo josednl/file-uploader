@@ -68,7 +68,7 @@ export const deleteFileRecordAndFromDisk = async (
   const filePath = path.join(UPLOADS_DIR, file.path);
 
   const deleteOperation = async (tx: Prisma.TransactionClient) => {
-    await fs.unlink(filePath).catch((err) => {
+    await fs.unlink(filePath).catch(err => {
       console.warn(`Failed to delete file from disk: ${filePath}`, err.message);
     });
 
@@ -95,7 +95,7 @@ export const findFileByIdAndOwnerWithFolder = async (
   });
 };
 
-// Move file to another folder 
+// Move file to another folder
 export const moveFileToFolder = async (
   fileId: string,
   ownerId: string,
