@@ -37,6 +37,13 @@ export const getFolderByIdWithContents = async (folderId: string): Promise<Folde
   });
 };
 
+// Get folder by ID without relations
+export async function getFolderById(folderId: string) {
+  return prisma.folder.findUnique({
+    where: { id: folderId },
+  });
+}
+
 // Get breadcrumb for a folder
 export async function getFolderBreadcrumb(folderId: string): Promise<Folder[]> {
   const breadcrumb: Folder[] = [];
@@ -238,4 +245,25 @@ export async function getUserPermissionForFolder(
   }
 
   return null;
+}
+
+export async function updateFolderPermission(folderId: string, targetUserId: string, newPermission: 'READ' | 'EDIT') {
+  return prisma.sharedFolder.updateMany({
+    where: {
+      folderId,
+      userId: targetUserId,
+    },
+    data: {
+      permission: newPermission,
+    },
+  });
+}
+
+export async function removeSharedUser(folderId: string, targetUserId: string) {
+  return prisma.sharedFolder.deleteMany({
+    where: {
+      folderId,
+      userId: targetUserId,
+    },
+  });
 }

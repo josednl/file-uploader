@@ -14,6 +14,9 @@ import {
   getFoldersSharedWithUser,
   findAccessibleFolder,
   getUserPermissionForFolder,
+  updateFolderPermission,
+  getFolderById,
+  removeSharedUser,
 } from '../services/folder.service';
 
 import { getUserId } from '../../../utils/auth';
@@ -218,5 +221,79 @@ export const listSharedFolders = async (req: Request, res: Response) => {
     console.error(error);
     req.flash('error', 'Failed to load shared folders');
     res.redirect('/dashboard');
+  }
+};
+
+// POST /folders/:id/share/update
+export const updateSharedPermissionHandler = async (req: Request, res: Response) => {
+  const userId = getUserId(req);
+  const folderId = req.params.id;
+  const { userId: targetUserId, permission } = req.body;
+
+  try {
+    const folder = await getFolderById(folderId);
+
+    if (!folder || folder.ownerId !== userId) {
+      req.flash('error', 'Access denied');
+      return res.redirect(`/folders/${folderId}`);
+    }
+
+    if (!['READ', 'EDIT'].includes(permission)) {
+      req.flash('error', 'Invalid permission');
+      return res.redirect(`/folders/${folderId}`);
+    }
+
+    if (targetUserId === userId) {
+      req.flash('error', 'You cannot change your own permission');
+      return res.redirect(`/folders/${folderId}`);
+    }
+
+    const result = await updateFolderPermission(folderId, targetUserId, permission);
+
+    if (result.count === 0) {
+      req.flash('error', 'Permission not updated. Maybe user is not shared with this folder.');
+    } else {
+      req.flash('success', 'Permission updated');
+    }
+
+    res.redirect(`/folders/${folderId}`);
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Failed to update permission');
+    res.redirect(`/folders/${folderId}`);
+  }
+};
+
+export const removeSharedUserHandler = async (req: Request, res: Response) => {
+  const userId = getUserId(req);
+  const folderId = req.params.id;
+  const targetUserId = req.body.userId; // enviado desde un form oculto o input
+
+  try {
+    const folder = await getFolderById(folderId);
+
+    if (!folder || folder.ownerId !== userId) {
+      req.flash('error', 'Access denied');
+      return res.redirect(`/folders/${folderId}`);
+    }
+
+    if (targetUserId === userId) {
+      req.flash('error', 'You cannot remove yourself from the shared list');
+      return res.redirect(`/folders/${folderId}`);
+    }
+
+    const result = await removeSharedUser(folderId, targetUserId);
+
+    if (result.count === 0) {
+      req.flash('error', 'User was not shared with this folder');
+    } else {
+      req.flash('success', 'Access removed for user');
+    }
+
+    res.redirect(`/folders/${folderId}`);
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Failed to remove access');
+    res.redirect(`/folders/${folderId}`);
   }
 };

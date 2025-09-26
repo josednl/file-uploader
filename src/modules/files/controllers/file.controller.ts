@@ -11,6 +11,8 @@ import {
 } from '../services/file.service';
 
 import { getUserId } from '../../../utils/auth';
+import { permission } from 'process';
+import { Permission } from '@prisma/client';
 
 // GET /files
 export const listFiles = async (req: Request, res: Response) => {
@@ -108,7 +110,8 @@ export const getFileDetails = async (req: Request, res: Response) => {
       return res.redirect('/files');
     }
     const file = result.file;
-    res.render('files/details', { file, from });
+    const permission = result.permission;
+    res.render('files/details', { file, from, permission });
   } catch (error) {
     console.error('Error fetching file details:', error);
     req.flash('error', 'Failed to load file details');
