@@ -308,3 +308,11 @@ export async function isFolderDescendant(folderId: string, rootFolderId: string)
 
   return false;
 }
+
+export const deletePublicSharesByFolderId = async (folderId: string) => {
+  return await prisma.publicFolderShare.deleteMany({
+    where: {
+      folderId,
+    },
+  });
+};

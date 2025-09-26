@@ -9,11 +9,11 @@ import {
     updateFolderHandler, 
     deleteFolderHandler,
     createPublicShareHandler,
-    viewSharedFolder,
     handleShareFolder,
     listSharedFolders,
     updateSharedPermissionHandler,
-    removeSharedUserHandler
+    removeSharedUserHandler,
+    unshareFolderPublicHandler
 } from '../controllers/folder.controller';
 
 const router = Router();
@@ -31,5 +31,6 @@ router.post('/share/:id/public', createPublicShareHandler);
 router.post('/:id/share', handleShareFolder);
 router.post('/:id/share/update', updateSharedPermissionHandler);
 router.post('/:id/unshare/user', removeSharedUserHandler);
+router.post('/:id/unshare/public', unshareFolderPublicHandler);
 
 export default router;

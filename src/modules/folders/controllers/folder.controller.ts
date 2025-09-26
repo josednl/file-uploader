@@ -18,8 +18,10 @@ import {
   getFolderById,
   removeSharedUser,
   isFolderDescendant,
+  deletePublicSharesByFolderId,
 } from '../services/folder.service';
 import { getUserId } from '../../../utils/auth';
+import { get } from 'http';
 
 // GET /folders
 export const listRootFolders = async (req: Request, res: Response) => {
@@ -335,6 +337,34 @@ export const removeSharedUserHandler = async (req: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     req.flash('error', 'Failed to remove access');
+    res.redirect(`/folders/${folderId}`);
+  }
+};
+
+export const unshareFolderPublicHandler = async (req: Request, res: Response) => {
+  const folderId = req.params.id;
+  const userId = getUserId(req);
+
+  if (!userId) {
+    req.flash('error', 'You must be logged in');
+    return res.redirect('/login');
+  }
+
+  try {
+    const folder = await getFolderById(folderId);
+
+    if (!folder || folder.ownerId !== userId) {
+      req.flash('error', 'Unauthorized');
+      return res.redirect('/');
+    }
+
+    await deletePublicSharesByFolderId(folderId);
+
+    req.flash('success', 'Public link disabled successfully');
+    res.redirect(`/folders/${folderId}`);
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Failed to disable public link');
     res.redirect(`/folders/${folderId}`);
   }
 };
