@@ -5,17 +5,28 @@
   "main": "app.js",
   "type": "commonjs",
   "prisma": {
-    "schema": "src/modules/prisma/schema.prisma"
+    "schema": "src/infraestructure/prisma/schema.prisma"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --watch src --ext ts --exec ts-node src/app.ts",
-    "seed": "npx ts-node config/seed.ts",
     "build:css": "npx @tailwindcss/cli -i ./public/styles/main.css -o ./public/styles/output.css --watch",
+
+    "build" : "tsc && npm run copy:views",
+    "copy:views": "cp -r src/views dist/views",
+    "start" : "node dist/app.js",
+    
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+
+    "seed": "npx ts-node config/seed.ts",
+
     "format": "prettier --write \"src/**/*.{ts,js,json,css}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,js,json,css}\""
+    "format:check": "prettier --check \"src/**/*.{ts,js,json,css}\"",
+
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build"
   },
   "keywords": [],
   "author": "",
