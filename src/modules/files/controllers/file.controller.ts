@@ -16,6 +16,7 @@ import {
   getFolderByPublicToken,
   isFolderDescendant,
 } from '../../folders/services/folder.service';
+import { supabase } from '../../../lib/supabase';
 
 // GET /files
 export const listFiles = async (req: Request, res: Response) => {
@@ -58,14 +59,28 @@ export const downloadFile = async (req: Request, res: Response) => {
 
   try {
     const result = await findAccessibleFile(fileId, userId);
-
     if (!result) {
       req.flash('error', 'File not found or access denied');
       return res.redirect('/files');
     }
 
-    const absolutePath = path.resolve('uploads', result.file.path);
-    res.download(absolutePath, result.file.name);
+    const file = result.file;
+
+    const urlParts = file.path.split('/');
+    const filename = urlParts[urlParts.length - 1];
+
+    const { data, error } = await supabase
+      .storage
+      .from(process.env.SUPABASE_STORAGE_BUCKET!)
+      .download(filename);
+
+    if (error || !data) throw error || new Error('File not found in storage');
+
+    const buffer = Buffer.from(await data.arrayBuffer());
+
+    res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+    res.setHeader('Content-Type', file.mimeType);
+    res.send(buffer);
   } catch (error) {
     console.error('Error downloading file:', error);
     req.flash('error', 'Failed to download file');
@@ -166,28 +181,38 @@ export const downloadPublicFile = async (req: Request, res: Response) => {
 
   try {
     const publicShare = await getFolderByPublicToken(token);
-
     if (!publicShare) {
       req.flash('error', 'Invalid or expired public link');
       return res.redirect('/');
     }
 
     const file = await getFileByIdWithFolder(fileId);
-
     if (!file) {
       req.flash('error', 'File not found');
       return res.redirect(`/shared/${token}`);
     }
 
     const isAccessible = await isFolderDescendant(file.folderId!, publicShare.folderId);
-
     if (!isAccessible) {
       req.flash('error', 'Access denied to this file');
       return res.redirect(`/shared/${token}`);
     }
 
-    const absolutePath = path.resolve('uploads', file.path);
-    res.download(absolutePath, file.name);
+    const urlParts = file.path.split('/');
+    const filename = urlParts[urlParts.length - 1];
+
+    const { data, error } = await supabase
+      .storage
+      .from(process.env.SUPABASE_STORAGE_BUCKET!)
+      .download(filename);
+
+    if (error || !data) throw error || new Error('File not found in storage');
+
+    const buffer = Buffer.from(await data.arrayBuffer());
+
+    res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+    res.setHeader('Content-Type', file.mimeType);
+    res.send(buffer);
   } catch (error) {
     console.error('Error downloading public file:', error);
     req.flash('error', 'Unable to download file');

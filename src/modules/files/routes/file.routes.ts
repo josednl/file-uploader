@@ -10,14 +10,15 @@ import {
   showMoveFileForm,
   handleMoveFile,
 } from '../controllers/file.controller';
+import upload from '../../shared/middlewares/multer.config';
 
 const router = express.Router();
 router.use(requireAuth);
 
-const upload = multer({
-  dest: 'uploads/',
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-});
+// const upload = multer({
+//   dest: 'uploads/',
+//   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+// });
 
 router.get('/', listFiles);
 router.get('/details/:id', getFileDetails);

@@ -41,7 +41,7 @@
     <% if (isImage) { %>
     <section class="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200 text-center">
       <h2 class="text-xl font-semibold text-gray-800 mb-4">Image Preview</h2>
-      <img src="/files/download/<%= file.id %>" alt="File Preview: <%= file.name %>" class="max-w-full h-auto max-h-96 mx-auto rounded-lg shadow-lg object-contain border border-gray-300">
+      <img src="<%= file.path %>" alt="File Preview: <%= file.name %>" class="max-w-full h-auto max-h-96 mx-auto rounded-lg shadow-lg object-contain border border-gray-300">
     </section>
     <% } else if (isText) { %>
     <section class="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">

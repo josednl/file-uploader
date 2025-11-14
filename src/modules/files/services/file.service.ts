@@ -2,6 +2,8 @@ import { PrismaClient, File, Prisma } from '@prisma/client';
 import path from 'path';
 import fs from 'fs/promises';
 import { getUserPermissionForFolder } from '../../folders/services/folder.service';
+import { uploadToSupabaseStorage } from './uploadToSupabase';
+import { supabase } from '../../../lib/supabase';
 
 const prisma = new PrismaClient();
 const UPLOADS_DIR = path.resolve('uploads');
@@ -37,10 +39,13 @@ export const createFileRecord = async (
   ownerId: string,
   folderId?: string | null
 ): Promise<File> => {
+
+  const { publicUrl, filename } = await uploadToSupabaseStorage(fileData);
+
   return prisma.file.create({
     data: {
       name: fileData.originalname,
-      path: fileData.filename,
+      path: publicUrl,
       mimeType: fileData.mimetype,
       size: fileData.size,
       ownerId,
@@ -50,37 +55,67 @@ export const createFileRecord = async (
 };
 
 // Delete file record and remove from disk
+// export const deleteFileRecordAndFromDisk = async (
+//   fileId: string,
+//   userId: string,
+//   trx?: Prisma.TransactionClient
+// ): Promise<void> => {
+//   const client = trx || prisma;
+
+//   const file = await client.file.findUnique({
+//     where: { id: fileId },
+//   });
+
+//   if (!file) {
+//     throw new Error('File not found or unauthorized');
+//   }
+
+//   const filePath = path.join(UPLOADS_DIR, file.path);
+
+//   const deleteOperation = async (tx: Prisma.TransactionClient) => {
+//     await fs.unlink(filePath).catch(err => {
+//       console.warn(`Failed to delete file from disk: ${filePath}`, err.message);
+//     });
+
+//     await tx.file.delete({
+//       where: { id: fileId },
+//     });
+//   };
+
+//   if (trx) {
+//     await deleteOperation(client);
+//   } else {
+//     await prisma.$transaction(deleteOperation);
+//   }
+// };
+
+
 export const deleteFileRecordAndFromDisk = async (
   fileId: string,
   userId: string,
   trx?: Prisma.TransactionClient
 ): Promise<void> => {
+
   const client = trx || prisma;
 
-  const file = await client.file.findUnique({
-    where: { id: fileId },
-  });
+  const file = await client.file.findUnique({ where: { id: fileId } });
+  if (!file) throw new Error('File not found');
 
-  if (!file) {
-    throw new Error('File not found or unauthorized');
-  }
 
-  const filePath = path.join(UPLOADS_DIR, file.path);
+  const filename = file.path.split('/').pop();
 
-  const deleteOperation = async (tx: Prisma.TransactionClient) => {
-    await fs.unlink(filePath).catch(err => {
-      console.warn(`Failed to delete file from disk: ${filePath}`, err.message);
-    });
+  if (!filename) throw new Error('Filename not found');
 
-    await tx.file.delete({
-      where: { id: fileId },
-    });
-  };
+  await supabase.storage
+    .from(process.env.SUPABASE_STORAGE_BUCKET!)
+    .remove([filename]);
 
   if (trx) {
-    await deleteOperation(client);
+    await trx.file.delete({ where: { id: fileId } });
   } else {
-    await prisma.$transaction(deleteOperation);
+    await prisma.$transaction((tx) =>
+      tx.file.delete({ where: { id: fileId } })
+    );
   }
 };
 

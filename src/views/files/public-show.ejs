@@ -34,7 +34,7 @@
       
       <% if (file.mimeType.startsWith('image/')) { %>
         <div class="max-h-[50vh] overflow-hidden rounded-lg shadow-lg border border-gray-300">
-          <img src="/shared/public/<%= sharedToken %>/download/<%= file.id %>" alt="<%= file.name %> preview" class="max-w-full h-auto mx-auto object-contain">
+          <img src="<%= file.path %>" alt="<%= file.name %> preview" class="max-w-full h-auto mx-auto object-contain">
         </div>
         <p class="text-sm text-gray-500 mt-3">Click 'Download' for full resolution.</p>
 
