@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient, User as PrismaUser } from '@prisma/client';
-const prisma = new PrismaClient();
+import { User as PrismaUser } from '@prisma/client';
+import { prisma } from '../../../lib/prisma';
 
 export async function renderDashboard(req: Request, res: Response) {
   try {

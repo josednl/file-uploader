@@ -1,4 +1,5 @@
-import { Folder, Permission, Prisma, PrismaClient, PublicFolderShare } from '@prisma/client';
+import { Folder, Permission, Prisma, PublicFolderShare } from '@prisma/client';
+import { prisma } from '../../../lib/prisma';
 import crypto from 'crypto';
 import { deleteFileRecordAndFromDisk } from '../../files/services/file.service';
 import {
@@ -7,7 +8,6 @@ import {
   folderWithRelationsInclude,
 } from '../constants/folder.includes';
 
-const prisma = new PrismaClient();
 
 // Get folders owned by user
 export const findFoldersByOwner = async (ownerId: string) => {

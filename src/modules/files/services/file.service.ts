@@ -1,11 +1,11 @@
-import { PrismaClient, File, Prisma } from '@prisma/client';
+import { File, Prisma } from '@prisma/client';
+import { prisma } from '../../../lib/prisma';
 import path from 'path';
 import fs from 'fs/promises';
 import { getUserPermissionForFolder } from '../../folders/services/folder.service';
 import { uploadToSupabaseStorage } from './uploadToSupabase';
 import { supabase } from '../../../lib/supabase';
 
-const prisma = new PrismaClient();
 const UPLOADS_DIR = path.resolve('uploads');
 
 // Get file by ID

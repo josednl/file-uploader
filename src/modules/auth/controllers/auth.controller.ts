@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../../lib/prisma';
 import bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
 
 export const showLoginForm = (req: Request, res: Response) => {
   res.render('auth/login');
